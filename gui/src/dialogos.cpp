@@ -165,6 +165,43 @@ void alElegirCarpeta(GtkButton*, gpointer d) {
     g_object_unref(fc);
 }
 
+void alElegirImagen(GtkButton*, gpointer d) {
+    GtkWidget* entrada = GTK_WIDGET(d);
+    auto* padre = static_cast<GtkWindow*>(g_object_get_data(G_OBJECT(entrada), kPadre));
+    GtkFileChooserNative* fc = gtk_file_chooser_native_new(sinMnemonico(tr("boton.elegir")).c_str(), padre,
+                                                           GTK_FILE_CHOOSER_ACTION_OPEN, tr("boton.abrir").c_str(),
+                                                           tr("boton.cancelar").c_str());
+    GtkFileFilter* f = gtk_file_filter_new();
+    gtk_file_filter_set_name(f, tr("filtro.png").c_str());
+    gtk_file_filter_add_pattern(f, "*.png");
+    gtk_file_filter_add_pattern(f, "*.PNG");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(fc), f);
+    const std::string actual = gtk_entry_get_text(GTK_ENTRY(entrada));
+    if (!actual.empty())
+        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(fc), aGlib(desdeUtf8(actual).parent_path()).c_str());
+    if (gtk_native_dialog_run(GTK_NATIVE_DIALOG(fc)) == GTK_RESPONSE_ACCEPT) {
+        if (gchar* n = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(fc))) {
+            gtk_entry_set_text(GTK_ENTRY(entrada), utf8(rutaDesdeGlib(n)).c_str());
+            g_free(n);
+        }
+    }
+    g_object_unref(fc);
+}
+
+/// Campo con la ruta de una imagen PNG y botón «Elegir…» (TipoParametro::ArchivoImagen).
+GtkWidget* crearImagen(GtkWindow* padre, const std::string& ruta) {
+    GtkWidget* entrada = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(entrada), ruta.c_str());
+    gtk_entry_set_width_chars(GTK_ENTRY(entrada), 36);
+    gtk_widget_set_hexpand(entrada, TRUE);
+    g_object_set_data(G_OBJECT(entrada), kPadre, padre);
+    GtkWidget* caja = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    gtk_box_pack_start(GTK_BOX(caja), entrada, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(caja), boton("boton.elegir", G_CALLBACK(alElegirImagen), entrada), FALSE, FALSE, 0);
+    g_object_set_data(G_OBJECT(caja), kLista, entrada);
+    return caja;
+}
+
 /// Campo de texto con la carpeta y botón «Elegir…».
 GtkWidget* crearCarpeta(GtkWindow* padre, const std::string& carpeta) {
     GtkWidget* entrada = gtk_entry_new();
@@ -206,25 +243,50 @@ std::string leerTextoLargo(GtkWidget* c) {
     return r;
 }
 
-/// Selector de color (TipoParametro::Color); valor "#rrggbb".
+/// Colores ofrecidos para el texto (TipoParametro::Color). Lista dentro del propio
+/// diálogo: sin ventana de color aparte (en Windows podía quedar detrás del diálogo).
+struct ColorNombrado {
+    const char* hex;
+    const char* clave;
+    guint32 rgba;
+};
+constexpr ColorNombrado kColores[] = {
+    {"#000000", "color.negro", 0x000000FF},    {"#1f3a93", "color.azul_oscuro", 0x1F3A93FF},
+    {"#1e66f5", "color.azul", 0x1E66F5FF},     {"#c62828", "color.rojo", 0xC62828FF},
+    {"#2e7d32", "color.verde", 0x2E7D32FF},    {"#ef6c00", "color.naranja", 0xEF6C00FF},
+    {"#6a1b9a", "color.morado", 0x6A1B9AFF},   {"#616161", "color.gris", 0x616161FF},
+};
+
 GtkWidget* crearColor(const std::string& defecto) {
-    GdkRGBA c{0, 0, 0, 1};
-    if (!gdk_rgba_parse(&c, defecto.c_str())) c = GdkRGBA{0, 0, 0, 1};
-    return gtk_color_button_new_with_rgba(&c);
+    GtkListStore* modelo = gtk_list_store_new(3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
+    for (const ColorNombrado& c : kColores) {
+        GdkPixbuf* muestra = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 16, 16);
+        gdk_pixbuf_fill(muestra, c.rgba);
+        gtk_list_store_insert_with_values(modelo, nullptr, -1, 0, muestra, 1, tr(c.clave).c_str(), 2, c.hex, -1);
+        g_object_unref(muestra);
+    }
+    GtkWidget* combo = gtk_combo_box_new_with_model(GTK_TREE_MODEL(modelo));
+    g_object_unref(modelo);
+    gtk_combo_box_set_id_column(GTK_COMBO_BOX(combo), 2);
+    GtkCellRenderer* rMuestra = gtk_cell_renderer_pixbuf_new();
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo), rMuestra, FALSE);
+    gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(combo), rMuestra, "pixbuf", 0);
+    GtkCellRenderer* rTexto = gtk_cell_renderer_text_new();
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo), rTexto, TRUE);
+    gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(combo), rTexto, "text", 1);
+    if (!gtk_combo_box_set_active_id(GTK_COMBO_BOX(combo), defecto.c_str())) gtk_combo_box_set_active(GTK_COMBO_BOX(combo), 0);
+    return combo;
 }
 
 std::string leerColor(GtkWidget* c) {
-    GdkRGBA rgba;
-    gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(c), &rgba);
-    const auto canal = [](double v) { return static_cast<unsigned>(std::lround(std::clamp(v, 0.0, 1.0) * 255.0)); };
-    char buf[8];
-    g_snprintf(buf, sizeof(buf), "#%02x%02x%02x", canal(rgba.red), canal(rgba.green), canal(rgba.blue));
-    return buf;
+    const gchar* id = gtk_combo_box_get_active_id(GTK_COMBO_BOX(c));
+    return id ? id : "#000000";
 }
 
 /// Tipos cuyo último valor se recuerda entre usos.
 bool seRecuerda(TipoParametro t) {
-    return t == TipoParametro::Opcion || t == TipoParametro::Entero || t == TipoParametro::Color;
+    return t == TipoParametro::Opcion || t == TipoParametro::Entero || t == TipoParametro::Color ||
+           t == TipoParametro::ArchivoImagen;
 }
 
 GdkPixbuf* cargarLogo(const Claves& config, int lado) {
@@ -405,6 +467,9 @@ bool pedirParametros(GtkWindow* padre, const Modulo& modulo, Valores& valores, c
             c = crearColor(defecto);
             gtk_widget_set_halign(c, GTK_ALIGN_START);
             break;
+        case TipoParametro::ArchivoImagen:
+            c = crearImagen(padre, defecto);
+            break;
         }
         gtk_grid_attach(GTK_GRID(rejilla), etiqueta, 0, fila, 1, 1);
         gtk_grid_attach(GTK_GRID(rejilla), c, 1, fila, 1, 1);
@@ -451,6 +516,9 @@ bool pedirParametros(GtkWindow* padre, const Modulo& modulo, Valores& valores, c
                 break;
             case TipoParametro::Color:
                 valores[ps[i].id] = leerColor(c);
+                break;
+            case TipoParametro::ArchivoImagen:
+                valores[ps[i].id] = gtk_entry_get_text(GTK_ENTRY(g_object_get_data(G_OBJECT(c), kLista)));
                 break;
             }
             if (ctx.recordados && seRecuerda(ps[i].tipo))

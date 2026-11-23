@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(ibanascapdf
-    VERSION 0.0.4
+    VERSION 0.0.5
     DESCRIPTION "Ibanasca PDF Lab"
     HOMEPAGE_URL "https://donatellatech.com"
     LANGUAGES C CXX)
@@ -37,6 +37,7 @@ endif()
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3 REQUIRED IMPORTED_TARGET gtk+-3.0>=3.22)
 pkg_check_modules(QPDF REQUIRED IMPORTED_TARGET libqpdf>=11)
+find_package(ZLIB REQUIRED) # ya es dependencia de QPDF; se usa para leer PNG
 include(${PROJECT_SOURCE_DIR}/cmake/PDFium.cmake)
 
 # ------------------------------------------------------------------ versión

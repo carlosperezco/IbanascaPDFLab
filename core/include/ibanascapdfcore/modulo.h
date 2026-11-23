@@ -40,7 +40,8 @@ enum class TipoParametro {
     ArchivosPdf, ///< lista ordenada de PDF; valor: rutas UTF-8 separadas por '\n'
     Carpeta,     ///< carpeta; valor: ruta UTF-8
     TextoLargo,  ///< texto de varias líneas
-    Color        ///< color; valor "#rrggbb"
+    Color,       ///< color; valor "#rrggbb"
+    ArchivoImagen ///< imagen PNG; valor: ruta UTF-8
 };
 
 /// Descripción de un parámetro de un módulo.

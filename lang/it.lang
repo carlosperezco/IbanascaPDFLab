@@ -52,6 +52,7 @@ boton.bajar = Sposta _giù
 boton.elegir = _Scegli…
 boton.cerrar = _Chiudi
 
+filtro.png = Immagini PNG
 filtro.pdf = Documenti PDF
 archivo.sufijo = -modificato
 
@@ -80,6 +81,8 @@ error.sin_archivos = Nessun file selezionato.
 error.existe = Esiste già un file con quel nome; non viene sovrascritto. Cambia la cartella o il nome base.
 error.contrasena_archivo = Questo PDF è protetto da password. Aprilo, salvalo senza protezione e riprova.
 error.texto_vacio = Nessun testo inserito.
+error.png = L'immagine non è un PNG valido.
+error.png_entrelazado = I PNG interlacciati non sono supportati. Salva l'immagine senza interlacciamento.
 error.desconocido = Errore imprevisto.
 
 # Módulos de páginas
@@ -106,6 +109,23 @@ param.fuente.times_negrita = Times grassetto
 param.fuente.courier = Courier
 param.tamano = Dimensione (pt):
 param.color = Colore:
+
+color.negro = Nero
+color.azul_oscuro = Blu scuro
+color.azul = Blu
+color.rojo = Rosso
+color.verde = Verde
+color.naranja = Arancione
+color.morado = Viola
+color.gris = Grigio
+
+# Firma
+modulo.firma_visual.nombre = Firma _visiva (immagine PNG)…
+param.imagen = Immagine PNG:
+param.ancho_mm = Larghezza (mm):
+param.fondo = Sfondo bianco:
+param.fondo.quitar_blanco = Rimuovi (trasparente)
+param.fondo.conservar = Mantieni
 
 # Módulos de documento
 modulo.fusionar.nombre = _Unisci con altri PDF…

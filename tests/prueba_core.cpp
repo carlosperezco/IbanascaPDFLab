@@ -4,12 +4,16 @@
  */
 #include <ibanascapdfcore/claves.h>
 #include <ibanascapdfcore/error.h>
+#include <ibanascapdfcore/imagen.h>
 #include <ibanascapdfcore/idioma.h>
 #include <ibanascapdfcore/modulo.h>
 #include <ibanascapdfcore/rangos.h>
 #include <ibanascapdfcore/texto.h>
 
+#include <cstdint>
 #include <cstdio>
+#include <string>
+#include <zlib.h>
 #include <filesystem>
 #include <vector>
 
@@ -78,6 +82,33 @@ int main() {
     double rojo = 0, verde = 0, azul = 0;
     ibz::colorRgb("#ff8000", rojo, verde, azul);
     comprobar(rojo == 1.0 && verde > 0.5 && verde < 0.51 && azul == 0.0, "colorRgb");
+
+    // PNG mínimo: 2×1 RGBA (rojo opaco, azul medio transparente) con filtro Sub.
+    {
+        const auto be = [](std::uint32_t v) {
+            return std::string{char(v >> 24), char(v >> 16), char(v >> 8), char(v)};
+        };
+        const auto trozo = [&](const std::string& tipo, const std::string& d) {
+            const std::string td = tipo + d;
+            return be(static_cast<std::uint32_t>(d.size())) + td +
+                   be(static_cast<std::uint32_t>(crc32(0, reinterpret_cast<const Bytef*>(td.data()), static_cast<uInt>(td.size()))));
+        };
+        // Fila con filtro 1 (Sub): el segundo píxel se guarda como diferencia con el primero.
+        const unsigned char fila[] = {1, 255, 0, 0, 255, static_cast<unsigned char>(0 - 255), 0, 255, static_cast<unsigned char>(128 - 255)};
+        unsigned char comp[64];
+        uLongf largo = sizeof(comp);
+        compress(comp, &largo, fila, sizeof(fila));
+        const std::string ihdr = be(2) + be(1) + std::string{8, 6, 0, 0, 0};
+        const std::string png = std::string("\x89PNG\r\n\x1a\n", 8) + trozo("IHDR", ihdr) +
+                                trozo("IDAT", std::string(reinterpret_cast<char*>(comp), largo)) + trozo("IEND", "");
+        const ibz::ImagenRaster img = ibz::leerPng(std::string_view(png));
+        comprobar(img.ancho == 2 && img.alto == 1 && img.canales == 3, "PNG cabecera");
+        comprobar(img.color == std::vector<std::uint8_t>{255, 0, 0, 0, 0, 255}, "PNG color (filtro Sub)");
+        comprobar(img.alfa == std::vector<std::uint8_t>{255, 128}, "PNG alfa");
+        bool error = false;
+        try { ibz::leerPng(std::string_view("no es png")); } catch (const ibz::Error&) { error = true; }
+        comprobar(error, "PNG no válido");
+    }
 
     if (fallos == 0) std::printf("Todas las pruebas correctas\n");
     return fallos == 0 ? 0 : 1;

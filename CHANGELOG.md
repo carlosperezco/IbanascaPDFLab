@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [0.0.5] - 2026-11-23
+
+### Added
+- Sign › Visual Signature (PNG image): click on the page, choose the PNG, the width
+  in millimetres (the height keeps the proportion) and whether to remove the white
+  background (useful for scanned or photographed signatures). Works on rotated
+  pages and can be undone.
+- Own PNG reader (grey, grey+alpha, RGB, RGBA and palette; 1 to 16 bits;
+  transparency) using zlib, already a QPDF dependency: no new libraries.
+
 ## [0.0.4] - 2026-11-23
 
 ### Added
@@ -11,8 +21,9 @@ and the project follows [Semantic Versioning](https://semver.org/).
   lines), font (Helvetica, Times, Courier, regular or bold), size and color.
   Standard PDF fonts with WinAnsi encoding: no font file is embedded. The text is
   appended to the page content with QPDF and stays horizontal on rotated pages.
-- Parameter dialogs: multi-line text and color controls; the last font, size,
-  color and options chosen are remembered.
+- Parameter dialogs: multi-line text control and a color list with swatches
+  inside the dialog (no separate color window, which could stay hidden behind
+  the dialog on Windows); the last font, size, color and options are remembered.
 
 ## [0.0.3] - 2026-11-23
 

@@ -5,7 +5,7 @@
 A lightweight, free and open-source PDF editor for Windows and Linux, written in
 C++20 with GTK 3, PDFium and QPDF. Part of [DonatellaTech](https://donatellatech.com).
 
-> **Status: in development (0.0.4).** Viewer, page operations, merge, split and adding text are available;
+> **Status: in development (0.0.5).** Viewer, page operations, merge, split, text and visual signature are available;
 > the remaining editing functions arrive in the next 0.0.x versions.
 
 ## Features planned for 1.0.0
@@ -17,7 +17,7 @@ C++20 with GTK 3, PDFium and QPDF. Part of [DonatellaTech](https://donatellatech
 - Add text to a PDF
 - Rotate, reorder and delete pages
 
-Available in 0.0.4: add text (standard fonts, size, color); merge PDFs; split by page or range, or extract pages to another PDF;
+Available in 0.0.5: visual signature (PNG); add text (standard fonts, size, color); merge PDFs; split by page or range, or extract pages to another PDF;
 continuous viewer (fit width, fit page, zoom) with thumbnails;
 rotate, move, delete and reorder pages (also by dragging thumbnails), with undo;
 protected PDFs, drag and drop, "Save as", interface in English, Spanish and Italian.
@@ -32,13 +32,13 @@ PDFium is not packaged by the distributions or MSYS2; the script
 ### Linux (Debian/Ubuntu)
 
 ```bash
-sudo apt install build-essential cmake pkg-config libgtk-3-dev libqpdf-dev curl
+sudo apt install build-essential cmake pkg-config libgtk-3-dev libqpdf-dev zlib1g-dev curl
 ./tools/obtener_pdfium.sh
 cmake -S . -B build && cmake --build build -j
 ./build/bin/ibanascapdf
 ```
 
-Fedora: `sudo dnf install gcc-c++ cmake pkgconf gtk3-devel qpdf-devel curl`.
+Fedora: `sudo dnf install gcc-c++ cmake pkgconf gtk3-devel qpdf-devel zlib-devel curl`.
 
 ### Windows (MSYS2, UCRT64 terminal)
 
