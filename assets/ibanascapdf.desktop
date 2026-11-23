@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Ibanasca PDF Lab
+GenericName=PDF Editor
+GenericName[es]=Editor de PDF
+GenericName[it]=Editor PDF
+Comment=Lightweight PDF editor
+Comment[es]=Editor ligero de PDF
+Comment[it]=Editor PDF leggero
+Exec=ibanascapdf %f
+Icon=ibanascapdf
+Terminal=false
+MimeType=application/pdf;
+Categories=Office;Viewer;

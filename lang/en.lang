@@ -1,0 +1,131 @@
+# Ibanasca PDF Lab — English
+# All three translations (es, en, it) must have the same keys.
+# The underscore marks the menu access key (Alt + letter).
+
+idioma.nombre = English
+
+menu.archivo = _File
+menu.editar = _Edit
+menu.ver = _View
+menu.paginas = _Pages
+menu.documento = _Document
+menu.firma = _Sign
+menu.ayuda = _Help
+menu.idioma = _Language
+
+accion.abrir = _Open…
+accion.guardar_como = Save _As…
+accion.cerrar = _Close
+accion.salir = _Quit
+accion.deshacer = _Undo
+accion.rehacer = _Redo
+accion.acercar = Zoom _In
+accion.alejar = Zoom _Out
+accion.tamano_real = _Actual Size
+accion.ajustar_pagina = Fit _Page
+accion.ajustar_ancho = Fit _Width
+accion.pagina_anterior = _Previous Page
+accion.pagina_siguiente = _Next Page
+accion.primera_pagina = _First Page
+accion.ultima_pagina = _Last Page
+accion.ir_a_pagina = _Go to Page…
+accion.acerca_de = _About Ibanasca PDF Lab
+
+dialogo.abrir = Open PDF
+dialogo.guardar_como = Save PDF As
+dialogo.contrasena.titulo = Protected PDF
+dialogo.contrasena.texto = This document is protected. Enter the password to open it:
+dialogo.contrasena.incorrecta = The password is not correct. Please try again:
+dialogo.descartar.titulo = There are unsaved changes
+dialogo.descartar.texto = If you continue without saving, the changes made to this document will be lost.
+
+boton.abrir = _Open
+boton.guardar = _Save
+boton.guardar_como = Save _As…
+boton.cancelar = _Cancel
+boton.aceptar = _OK
+boton.descartar = _Discard
+boton.anadir = _Add…
+boton.quitar = _Remove
+boton.subir = Move _Up
+boton.bajar = Move _Down
+boton.elegir = _Choose…
+boton.cerrar = _Close
+
+filtro.pdf = PDF documents
+archivo.sufijo = -edited
+
+estado.sin_documento = No document
+estado.pagina_antes = Page
+estado.de_total = of {1}
+estado.colocar = Click on the page where you want to place it (Esc cancels).
+estado.zoom = {1} %
+
+bienvenida.mensaje = Open a PDF with File › Open or drag it onto this window.
+acerca.descripcion = Lightweight, free and open-source PDF editor.
+
+error.titulo = Error
+error.leer = The file could not be read.
+error.escribir = The file could not be saved.
+error.formato = The file is not a valid PDF or it is damaged.
+error.contrasena = The document is password protected.
+error.seguridad = The document uses a protection scheme that cannot be opened.
+error.sobrescribir_original = For safety, the original file is never overwritten. Choose another name.
+error.rangos = The page range is not valid. Example: 1-3,5,8-
+error.sin_documento = No document is open.
+error.qpdf = QPDF could not process the document.
+error.eliminar_todas = All the pages of the document cannot be deleted.
+error.orden = The new page order is not valid.
+error.sin_archivos = No file was chosen.
+error.existe = A file with that name already exists; it is not overwritten. Change the folder or the base name.
+error.contrasena_archivo = This PDF is password protected. Open it, save it without protection and try again.
+error.texto_vacio = No text was written.
+error.desconocido = Unexpected error.
+
+# Módulos de páginas
+modulo.rotar_derecha.nombre = Rotate _Right
+modulo.rotar_izquierda.nombre = Rotate _Left
+modulo.rotar.nombre = R_otate Pages…
+modulo.mover.nombre = _Move Pages…
+modulo.eliminar.nombre = _Delete Pages…
+param.paginas = Pages (e.g. 1-3,5,8-):
+param.angulo = Rotation:
+param.angulo.90 = 90° clockwise
+param.angulo.180 = 180°
+param.angulo.270 = 90° counterclockwise
+param.posicion = New position:
+
+# Texto
+modulo.texto.nombre = Add _Text…
+param.texto = Text:
+param.fuente = Font:
+param.fuente.helvetica = Helvetica
+param.fuente.helvetica_negrita = Helvetica bold
+param.fuente.times = Times
+param.fuente.times_negrita = Times bold
+param.fuente.courier = Courier
+param.tamano = Size (pt):
+param.color = Color:
+
+# Módulos de documento
+modulo.fusionar.nombre = _Merge with Other PDFs…
+modulo.separar.nombre = _Split or Extract Pages…
+param.archivos = PDFs to add:
+param.donde = Insert:
+param.donde.final = At the end
+param.donde.inicio = At the beginning
+param.donde.actual = After the current page
+param.modo = Mode:
+param.modo.paginas = One file per page
+param.modo.rangos = One file per range (1-3,4-6…)
+param.modo.extraer = All pages in a single PDF
+param.carpeta = Folder:
+param.nombre = Base name:
+
+mensaje.separado = {1} files were created in {2}.
+mensaje.extraido = {1} was created.
+
+cli.uso = Usage: ibanascapdf [options] [file.pdf]\n\n  -h, --help      Show this help\n  -v, --version   Show the version\n  --list          List the available modules
+cli.opcion_desconocida = Unknown option: {1}
+cli.modulos = Available modules:
+cli.sin_modulos = No modules are registered.

@@ -1,0 +1,131 @@
+# Ibanasca PDF Lab — Italiano
+# Le tre traduzioni (es, en, it) devono avere le stesse chiavi.
+# Il trattino basso indica il tasto di accesso del menu (Alt + lettera).
+
+idioma.nombre = Italiano
+
+menu.archivo = _File
+menu.editar = _Modifica
+menu.ver = _Visualizza
+menu.paginas = _Pagine
+menu.documento = _Documento
+menu.firma = F_irma
+menu.ayuda = _Aiuto
+menu.idioma = _Lingua
+
+accion.abrir = _Apri…
+accion.guardar_como = Salva _come…
+accion.cerrar = _Chiudi
+accion.salir = _Esci
+accion.deshacer = _Annulla
+accion.rehacer = _Ripeti
+accion.acercar = _Ingrandisci
+accion.alejar = _Riduci
+accion.tamano_real = Dimensione _reale
+accion.ajustar_pagina = Adatta alla _pagina
+accion.ajustar_ancho = Adatta alla _larghezza
+accion.pagina_anterior = Pagina _precedente
+accion.pagina_siguiente = Pagina _successiva
+accion.primera_pagina = Pr_ima pagina
+accion.ultima_pagina = _Ultima pagina
+accion.ir_a_pagina = _Vai alla pagina…
+accion.acerca_de = _Informazioni su Ibanasca PDF Lab
+
+dialogo.abrir = Apri PDF
+dialogo.guardar_como = Salva PDF come
+dialogo.contrasena.titulo = PDF protetto
+dialogo.contrasena.texto = Questo documento è protetto. Inserisci la password per aprirlo:
+dialogo.contrasena.incorrecta = La password non è corretta. Riprova:
+dialogo.descartar.titulo = Ci sono modifiche non salvate
+dialogo.descartar.texto = Se continui senza salvare, le modifiche apportate a questo documento andranno perse.
+
+boton.abrir = _Apri
+boton.guardar = _Salva
+boton.guardar_como = Salva _come…
+boton.cancelar = A_nnulla
+boton.aceptar = _OK
+boton.descartar = _Scarta
+boton.anadir = A_ggiungi…
+boton.quitar = _Rimuovi
+boton.subir = Sposta _su
+boton.bajar = Sposta _giù
+boton.elegir = _Scegli…
+boton.cerrar = _Chiudi
+
+filtro.pdf = Documenti PDF
+archivo.sufijo = -modificato
+
+estado.sin_documento = Nessun documento
+estado.pagina_antes = Pagina
+estado.de_total = di {1}
+estado.colocar = Fai clic sulla pagina dove vuoi posizionarlo (Esc annulla).
+estado.zoom = {1} %
+
+bienvenida.mensaje = Apri un PDF con File › Apri o trascinalo in questa finestra.
+acerca.descripcion = Editor PDF leggero, gratuito e open source.
+
+error.titulo = Errore
+error.leer = Impossibile leggere il file.
+error.escribir = Impossibile salvare il file.
+error.formato = Il file non è un PDF valido oppure è danneggiato.
+error.contrasena = Il documento è protetto da password.
+error.seguridad = Il documento usa un sistema di protezione che non può essere aperto.
+error.sobrescribir_original = Per sicurezza il file originale non viene mai sovrascritto. Scegli un altro nome.
+error.rangos = L'intervallo di pagine non è valido. Esempio: 1-3,5,8-
+error.sin_documento = Nessun documento aperto.
+error.qpdf = QPDF non è riuscito a elaborare il documento.
+error.eliminar_todas = Non è possibile eliminare tutte le pagine del documento.
+error.orden = Il nuovo ordine delle pagine non è valido.
+error.sin_archivos = Nessun file selezionato.
+error.existe = Esiste già un file con quel nome; non viene sovrascritto. Cambia la cartella o il nome base.
+error.contrasena_archivo = Questo PDF è protetto da password. Aprilo, salvalo senza protezione e riprova.
+error.texto_vacio = Nessun testo inserito.
+error.desconocido = Errore imprevisto.
+
+# Módulos de páginas
+modulo.rotar_derecha.nombre = Ruota a _destra
+modulo.rotar_izquierda.nombre = Ruota a _sinistra
+modulo.rotar.nombre = _Ruota pagine…
+modulo.mover.nombre = _Sposta pagine…
+modulo.eliminar.nombre = _Elimina pagine…
+param.paginas = Pagine (es. 1-3,5,8-):
+param.angulo = Rotazione:
+param.angulo.90 = 90° in senso orario
+param.angulo.180 = 180°
+param.angulo.270 = 90° in senso antiorario
+param.posicion = Nuova posizione:
+
+# Texto
+modulo.texto.nombre = Aggiungi _testo…
+param.texto = Testo:
+param.fuente = Carattere:
+param.fuente.helvetica = Helvetica
+param.fuente.helvetica_negrita = Helvetica grassetto
+param.fuente.times = Times
+param.fuente.times_negrita = Times grassetto
+param.fuente.courier = Courier
+param.tamano = Dimensione (pt):
+param.color = Colore:
+
+# Módulos de documento
+modulo.fusionar.nombre = _Unisci con altri PDF…
+modulo.separar.nombre = _Dividi o estrai pagine…
+param.archivos = PDF da aggiungere:
+param.donde = Inserisci:
+param.donde.final = Alla fine
+param.donde.inicio = All'inizio
+param.donde.actual = Dopo la pagina corrente
+param.modo = Modalità:
+param.modo.paginas = Un file per pagina
+param.modo.rangos = Un file per intervallo (1-3,4-6…)
+param.modo.extraer = Tutte le pagine in un solo PDF
+param.carpeta = Cartella:
+param.nombre = Nome base:
+
+mensaje.separado = Creati {1} file in {2}.
+mensaje.extraido = Creato {1}.
+
+cli.uso = Uso: ibanascapdf [opzioni] [file.pdf]\n\n  -h, --help      Mostra questo aiuto\n  -v, --version   Mostra la versione\n  --list          Elenca i moduli disponibili
+cli.opcion_desconocida = Opzione sconosciuta: {1}
+cli.modulos = Moduli disponibili:
+cli.sin_modulos = Nessun modulo registrato.

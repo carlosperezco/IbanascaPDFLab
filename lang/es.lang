@@ -1,0 +1,131 @@
+# Ibanasca PDF Lab — Español
+# Las tres traducciones (es, en, it) deben tener las mismas claves.
+# El guion bajo marca la tecla de acceso del menú (Alt + letra).
+
+idioma.nombre = Español
+
+menu.archivo = _Archivo
+menu.editar = _Editar
+menu.ver = _Ver
+menu.paginas = _Páginas
+menu.documento = _Documento
+menu.firma = _Firma
+menu.ayuda = Ay_uda
+menu.idioma = _Idioma
+
+accion.abrir = _Abrir…
+accion.guardar_como = _Guardar como…
+accion.cerrar = _Cerrar
+accion.salir = _Salir
+accion.deshacer = _Deshacer
+accion.rehacer = _Rehacer
+accion.acercar = _Acercar
+accion.alejar = A_lejar
+accion.tamano_real = _Tamaño real
+accion.ajustar_pagina = Ajustar a la pá_gina
+accion.ajustar_ancho = Ajustar al _ancho
+accion.pagina_anterior = Página _anterior
+accion.pagina_siguiente = Página _siguiente
+accion.primera_pagina = _Primera página
+accion.ultima_pagina = Ú_ltima página
+accion.ir_a_pagina = _Ir a la página…
+accion.acerca_de = _Acerca de Ibanasca PDF Lab
+
+dialogo.abrir = Abrir PDF
+dialogo.guardar_como = Guardar PDF como
+dialogo.contrasena.titulo = PDF protegido
+dialogo.contrasena.texto = Este documento está protegido. Escriba la contraseña para abrirlo:
+dialogo.contrasena.incorrecta = La contraseña no es correcta. Inténtelo de nuevo:
+dialogo.descartar.titulo = Hay cambios sin guardar
+dialogo.descartar.texto = Si continúa sin guardar, se perderán los cambios hechos en este documento.
+
+boton.abrir = _Abrir
+boton.guardar = _Guardar
+boton.guardar_como = _Guardar como…
+boton.cancelar = _Cancelar
+boton.aceptar = _Aceptar
+boton.descartar = _Descartar
+boton.anadir = _Añadir…
+boton.quitar = _Quitar
+boton.subir = S_ubir
+boton.bajar = _Bajar
+boton.elegir = _Elegir…
+boton.cerrar = _Cerrar
+
+filtro.pdf = Documentos PDF
+archivo.sufijo = -editado
+
+estado.sin_documento = Sin documento
+estado.pagina_antes = Página
+estado.de_total = de {1}
+estado.colocar = Haga clic en la página donde quiere colocarlo (Esc cancela).
+estado.zoom = {1} %
+
+bienvenida.mensaje = Abra un PDF con Archivo › Abrir o arrástrelo a esta ventana.
+acerca.descripcion = Editor ligero de PDF, gratuito y de código abierto.
+
+error.titulo = Error
+error.leer = No se pudo leer el archivo.
+error.escribir = No se pudo guardar el archivo.
+error.formato = El archivo no es un PDF válido o está dañado.
+error.contrasena = El documento está protegido con contraseña.
+error.seguridad = El documento usa un sistema de protección que no se puede abrir.
+error.sobrescribir_original = Por seguridad no se sobrescribe el archivo original. Elija otro nombre.
+error.rangos = El rango de páginas no es válido. Ejemplo: 1-3,5,8-
+error.sin_documento = No hay ningún documento abierto.
+error.qpdf = QPDF no pudo procesar el documento.
+error.eliminar_todas = No se pueden eliminar todas las páginas del documento.
+error.orden = El nuevo orden de páginas no es válido.
+error.sin_archivos = No se eligió ningún archivo.
+error.existe = Ya existe un archivo con ese nombre; no se sobrescribe. Cambie la carpeta o el nombre base.
+error.contrasena_archivo = Este PDF está protegido con contraseña. Ábralo, guárdelo sin protección y vuelva a intentarlo.
+error.texto_vacio = No se escribió ningún texto.
+error.desconocido = Error inesperado.
+
+# Módulos de páginas
+modulo.rotar_derecha.nombre = Girar a la _derecha
+modulo.rotar_izquierda.nombre = Girar a la _izquierda
+modulo.rotar.nombre = _Rotar páginas…
+modulo.mover.nombre = _Mover páginas…
+modulo.eliminar.nombre = _Eliminar páginas…
+param.paginas = Páginas (ej. 1-3,5,8-):
+param.angulo = Giro:
+param.angulo.90 = 90° a la derecha
+param.angulo.180 = 180°
+param.angulo.270 = 90° a la izquierda
+param.posicion = Nueva posición:
+
+# Texto
+modulo.texto.nombre = Añadir _texto…
+param.texto = Texto:
+param.fuente = Fuente:
+param.fuente.helvetica = Helvetica
+param.fuente.helvetica_negrita = Helvetica negrita
+param.fuente.times = Times
+param.fuente.times_negrita = Times negrita
+param.fuente.courier = Courier
+param.tamano = Tamaño (pt):
+param.color = Color:
+
+# Módulos de documento
+modulo.fusionar.nombre = _Fusionar con otros PDF…
+modulo.separar.nombre = _Separar o extraer páginas…
+param.archivos = PDF que se añaden:
+param.donde = Insertar:
+param.donde.final = Al final
+param.donde.inicio = Al principio
+param.donde.actual = Después de la página actual
+param.modo = Modo:
+param.modo.paginas = Un archivo por página
+param.modo.rangos = Un archivo por rango (1-3,4-6…)
+param.modo.extraer = Todas las páginas en un solo PDF
+param.carpeta = Carpeta:
+param.nombre = Nombre base:
+
+mensaje.separado = Se crearon {1} archivos en {2}.
+mensaje.extraido = Se creó {1}.
+
+cli.uso = Uso: ibanascapdf [opciones] [archivo.pdf]\n\n  -h, --help      Muestra esta ayuda\n  -v, --version   Muestra la versión\n  --list          Lista los módulos disponibles
+cli.opcion_desconocida = Opción desconocida: {1}
+cli.modulos = Módulos disponibles:
+cli.sin_modulos = No hay módulos registrados.

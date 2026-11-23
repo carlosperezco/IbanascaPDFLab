@@ -1,0 +1,7 @@
+build/
+dist/
+instalador/
+docs/
+third_party/pdfium/
+__pycache__/
+*.tmp

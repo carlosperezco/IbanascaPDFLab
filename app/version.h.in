@@ -1,0 +1,19 @@
+/**
+ * @file version.h
+ * @brief Datos de versión. Generado por CMake desde app/version.h.in: no editar.
+ *
+ * La versión se define solo en `project(ibanascapdf VERSION x.y.z)` de CMakeLists.txt.
+ */
+#pragma once
+
+#define IBZ_NOMBRE "Ibanasca PDF Lab"
+#define IBZ_EJECUTABLE "ibanascapdf"
+#define IBZ_VERSION "@PROJECT_VERSION@"
+#define IBZ_VERSION_MAYOR @PROJECT_VERSION_MAJOR@
+#define IBZ_VERSION_MENOR @PROJECT_VERSION_MINOR@
+#define IBZ_VERSION_PARCHE @PROJECT_VERSION_PATCH@
+#define IBZ_AUTOR "Carlos N. Perez-Montenegro"
+#define IBZ_ORGANIZACION "DonatellaTech"
+#define IBZ_WEB "https://donatellatech.com"
+#define IBZ_CONTACTO "contacto@donatellatech.com"
+#define IBZ_ANIO "2026"
