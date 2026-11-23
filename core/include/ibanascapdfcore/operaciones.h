@@ -42,6 +42,25 @@ void moverPaginas(Documento& doc, const std::vector<int>& paginas, int posicion)
  */
 void reordenarPaginas(Documento& doc, const std::vector<int>& orden);
 
+/// PDF nuevo con una página en blanco de @p ancho × @p alto puntos.
+std::vector<unsigned char> crearPdfVacio(double ancho, double alto);
+
+/**
+ * @brief Inserta una página en blanco.
+ * @param posicion Índice (base 0) que ocupará la página nueva (0 … doc.paginas()).
+ * @param ancho, alto Tamaño en puntos PDF.
+ */
+void insertarPaginaBlanco(Documento& doc, int posicion, double ancho, double alto);
+
+/**
+ * @brief Duplica páginas: cada copia queda justo después de su original.
+ *
+ * Las copias comparten el contenido con el original (sin aumentar el tamaño del
+ * archivo); las anotaciones (enlaces, campos) no se copian.
+ * @param copias Número de copias de cada página (1 o más).
+ */
+void duplicarPaginas(Documento& doc, const std::vector<int>& paginas, int copias);
+
 /**
  * @brief Inserta en el documento todas las páginas de otros PDF, en el orden dado.
  * @param posicion Índice (base 0) donde queda la primera página insertada:

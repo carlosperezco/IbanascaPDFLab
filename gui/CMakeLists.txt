@@ -12,3 +12,7 @@ target_include_directories(ibanascapdfgui
 target_link_libraries(ibanascapdfgui
     PUBLIC ibanascapdfcore PkgConfig::GTK3
     PRIVATE ibz_opciones ibz_version)
+if(WIN32)
+    # gettext (libintl) para cambiar el idioma de GTK en ejecución; ya va con GTK.
+    target_link_libraries(ibanascapdfgui PRIVATE intl)
+endif()

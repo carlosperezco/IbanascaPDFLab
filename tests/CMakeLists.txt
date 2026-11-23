@@ -1,4 +1,5 @@
 add_executable(prueba_core prueba_core.cpp)
 target_link_libraries(prueba_core PRIVATE ibanascapdfcore ibz_opciones ZLIB::ZLIB)
 set_target_properties(prueba_core PROPERTIES BUILD_RPATH "$ORIGIN")
+target_compile_definitions(prueba_core PRIVATE IBZ_DATOS_PRUEBA="${CMAKE_CURRENT_SOURCE_DIR}/datos")
 add_test(NAME prueba_core COMMAND prueba_core)

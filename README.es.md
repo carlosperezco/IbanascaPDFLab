@@ -5,23 +5,26 @@
 Editor ligero de PDF, gratuito y de código abierto, para Windows y Linux, escrito
 en C++20 con GTK 3, PDFium y QPDF. Forma parte de [DonatellaTech](https://donatellatech.com).
 
-> **Estado: en desarrollo (0.0.5).** Ya están el visor, las operaciones de páginas, fusionar, separar, texto y firma visual;
-> el resto de funciones de edición llegan en las siguientes 0.0.x.
+## Funciones
 
-## Funciones previstas para la 1.0.0
+- **Ver:** desplazamiento continuo, zoom, ajustar al ancho y a la página, miniaturas,
+  ir a una página, PDF protegidos con contraseña, arrastrar y soltar.
+- **Páginas:** rotar, mover, eliminar, duplicar, insertar páginas en blanco y
+  reordenarlas arrastrando las miniaturas.
+- **Archivo:** nuevo PDF con una página en blanco del tamaño elegido (A4, Carta, Oficio, A5, A3).
+- **Documento:** fusionar PDF; separar por página o por rangos, o extraer páginas a otro PDF.
+- **Escribir:** añadir texto (Helvetica, Times o Courier; tamaño y color) e insertar imágenes PNG.
+- **Firmar:** firma digital PAdES-B-B con certificado `.p12`/`.pfx` (recuadro visible con
+  nombre y fecha, imagen PNG de la firma manuscrita o invisible) y firma visual con una
+  imagen PNG.
+- Deshacer y rehacer; el archivo original nunca se sobrescribe («Guardar como»).
+- Interfaz en español, inglés e italiano.
 
-- Firmar: firma criptográfica (PAdES-B-B con certificado `.p12`/`.pfx`) y firma
-  visual / manuscrita (PNG)
-- Fusionar PDF
-- Separar por página o por rangos, y extraer páginas o rangos a otro PDF
-- Escribir texto en un PDF
-- Rotar, reordenar y eliminar páginas
+## Descarga
 
-Disponible en la 0.0.5: firma visual (PNG); añadir texto (fuentes estándar, tamaño, color); fusionar PDF; separar por página o por rangos, o extraer
-páginas a otro PDF; visor continuo (ajustar al ancho, a la página, zoom) con
-miniaturas; rotar, mover, eliminar y reordenar páginas (también arrastrando las
-miniaturas), con deshacer; PDF protegidos, arrastrar y soltar, «Guardar como»,
-interfaz en español, inglés e italiano.
+El instalador para Windows (`IbanascaPDFLab-<versión>-win64.exe`) se publica en cada
+versión (Release) del repositorio, junto con el código fuente de las bibliotecas
+incluidas. En Linux se compila desde el código fuente como se explica a continuación.
 
 ## Compilar
 
@@ -33,18 +36,18 @@ PDFium no está empaquetado en las distribuciones ni en MSYS2; el script
 ### Linux (Debian/Ubuntu)
 
 ```bash
-sudo apt install build-essential cmake pkg-config libgtk-3-dev libqpdf-dev zlib1g-dev curl
+sudo apt install build-essential cmake pkg-config libgtk-3-dev libqpdf-dev zlib1g-dev libgnutls28-dev curl
 ./tools/obtener_pdfium.sh
 cmake -S . -B build && cmake --build build -j
 ./build/bin/ibanascapdf
 ```
 
-Fedora: `sudo dnf install gcc-c++ cmake pkgconf gtk3-devel qpdf-devel zlib-devel curl`.
+Fedora: `sudo dnf install gcc-c++ cmake pkgconf gtk3-devel qpdf-devel zlib-devel gnutls-devel curl`.
 
 ### Windows (MSYS2, terminal UCRT64)
 
 ```bash
-pacman -S --needed mingw-w64-ucrt-x86_64-{gcc,cmake,ninja,pkgconf,gtk3,qpdf,nsis} curl tar
+pacman -S --needed mingw-w64-ucrt-x86_64-{gcc,cmake,ninja,pkgconf,gtk3,qpdf,gnutls,nsis} curl tar
 ./tools/obtener_pdfium.sh
 cmake -S . -B build -G Ninja && cmake --build build
 ./build/bin/ibanascapdf.exe
@@ -99,6 +102,22 @@ se crean solos. Ver `core/include/ibanascapdfcore/modulo.h`.
 
 Versionado semántico; la versión se define solo en `project(... VERSION x.y.z)`
 de `CMakeLists.txt`. Ver [CHANGELOG.md](CHANGELOG.md).
+
+## Sobre el nombre
+
+El nombre rinde homenaje a **Ibanasca**, madre del agua y diosa protectora de los
+nevados en la cultura pijao del Tolima, Colombia. Según la tradición, fue quemada
+durante la conquista y purificada por el dios del fuego. El proyecto no pretende
+representar a la deidad ni hablar en nombre del pueblo pijao.
+
+## Donaciones
+
+Ibanasca PDF Lab es gratuito y seguirá siéndolo. Si le gusta y quiere agradecerlo,
+puede hacer una donación voluntaria en
+[buymeacoffee.com/CarlosNPerezM](https://buymeacoffee.com/CarlosNPerezM).
+
+Una donación es solo un agradecimiento por el programa: no da derecho a soporte,
+servicios, prioridad, funciones ni suscripción de ningún tipo.
 
 ## Licencia
 

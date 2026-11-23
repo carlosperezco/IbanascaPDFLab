@@ -261,4 +261,75 @@ void escribirGrupos(const Documento& doc, const std::vector<std::vector<int>>& g
     }
 }
 
+void insertarPaginaBlanco(Documento& doc, int posicion, double ancho, double alto) {
+    const int pos = std::clamp(posicion, 0, doc.paginas());
+    const double w = std::clamp(ancho, 72.0, 14400.0);
+    const double h = std::clamp(alto, 72.0, 14400.0);
+    Documento::Bytes nuevo;
+    try {
+        std::unique_ptr<QPDF> pdf = abrirQpdf(doc);
+        QPDFPageDocumentHelper paginas(*pdf);
+        QPDFObjectHandle caja = QPDFObjectHandle::newArray();
+        for (const double v : {0.0, 0.0, w, h}) caja.appendItem(QPDFObjectHandle::newReal(v, 3));
+        QPDFObjectHandle pagina = QPDFObjectHandle::newDictionary();
+        pagina.replaceKey("/Type", QPDFObjectHandle::newName("/Page"));
+        pagina.replaceKey("/MediaBox", caja);
+        pagina.replaceKey("/Resources", QPDFObjectHandle::newDictionary());
+        pagina.replaceKey("/Contents", QPDFObjectHandle::newStream(pdf.get(), ""));
+        QPDFPageObjectHelper nueva(pdf->makeIndirectObject(pagina));
+        const std::vector<QPDFPageObjectHelper> todas = paginas.getAllPages();
+        if (pos >= static_cast<int>(todas.size())) {
+            paginas.addPage(nueva, false);
+        } else {
+            paginas.addPageAt(nueva, true, todas[static_cast<std::size_t>(pos)]);
+        }
+        nuevo = escribirQpdf(*pdf);
+    } catch (const Error&) {
+        throw;
+    } catch (const std::exception& e) {
+        throw Error("error.qpdf", e.what());
+    }
+    doc.reemplazar(std::move(nuevo));
+}
+
+void duplicarPaginas(Documento& doc, const std::vector<int>& paginas, int copias) {
+    validar(paginas, doc.paginas());
+    const int n = std::clamp(copias, 1, 100);
+    conQpdf(doc, [&](QPDFPageDocumentHelper& h) {
+        const std::vector<QPDFPageObjectHelper> todas = h.getAllPages();
+        std::vector<bool> hecha(todas.size(), false);
+        for (const int p : paginas) {
+            const std::size_t i = static_cast<std::size_t>(p);
+            if (hecha[i]) continue;
+            hecha[i] = true;
+            QPDFPageObjectHelper original = todas[i];
+            for (int k = 0; k < n; ++k) {
+                QPDFPageObjectHelper copia = original.shallowCopyPage();
+                copia.getObjectHandle().removeKey("/Annots"); // una anotación no puede estar en dos páginas
+                h.addPageAt(copia, false, original);
+            }
+        }
+    });
+}
+
+std::vector<unsigned char> crearPdfVacio(double ancho, double alto) {
+    const double w = std::clamp(ancho, 72.0, 14400.0);
+    const double h = std::clamp(alto, 72.0, 14400.0);
+    try {
+        QPDF pdf;
+        pdf.emptyPDF();
+        QPDFObjectHandle caja = QPDFObjectHandle::newArray();
+        for (const double v : {0.0, 0.0, w, h}) caja.appendItem(QPDFObjectHandle::newReal(v, 3));
+        QPDFObjectHandle pagina = QPDFObjectHandle::newDictionary();
+        pagina.replaceKey("/Type", QPDFObjectHandle::newName("/Page"));
+        pagina.replaceKey("/MediaBox", caja);
+        pagina.replaceKey("/Resources", QPDFObjectHandle::newDictionary());
+        pagina.replaceKey("/Contents", QPDFObjectHandle::newStream(&pdf, ""));
+        QPDFPageDocumentHelper(pdf).addPage(QPDFPageObjectHelper(pdf.makeIndirectObject(pagina)), false);
+        return escribirQpdf(pdf);
+    } catch (const std::exception& e) {
+        throw Error("error.qpdf", e.what());
+    }
+}
+
 } // namespace ibz

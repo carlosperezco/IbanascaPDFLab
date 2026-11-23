@@ -13,6 +13,7 @@ menu.firma = F_irma
 menu.ayuda = _Aiuto
 menu.idioma = _Lingua
 
+accion.nuevo = _Nuovo…
 accion.abrir = _Apri…
 accion.guardar_como = Salva _come…
 accion.cerrar = _Chiudi
@@ -53,7 +54,9 @@ boton.elegir = _Scegli…
 boton.cerrar = _Chiudi
 
 filtro.png = Immagini PNG
+filtro.certificado = Certificati (.p12, .pfx)
 filtro.pdf = Documenti PDF
+archivo.sin_titulo = Senza titolo
 archivo.sufijo = -modificato
 
 estado.sin_documento = Nessun documento
@@ -63,6 +66,9 @@ estado.colocar = Fai clic sulla pagina dove vuoi posizionarlo (Esc annulla).
 estado.zoom = {1} %
 
 bienvenida.mensaje = Apri un PDF con File › Apri o trascinalo in questa finestra.
+acerca.nombre = Il nome rende omaggio a Ibanasca, madre dell'acqua e dea protettrice delle montagne innevate nella cultura pijao del Tolima (Colombia). Secondo la tradizione, fu bruciata durante la conquista e purificata dal dio del fuoco. Il progetto non pretende di rappresentare la divinità né di parlare a nome del popolo pijao.
+acerca.version = Versione {1}
+acerca.licencia = Software libero con licenza MIT. Fornito così com’è, senza alcuna garanzia.
 acerca.descripcion = Editor PDF leggero, gratuito e open source.
 
 error.titulo = Errore
@@ -83,6 +89,14 @@ error.contrasena_archivo = Questo PDF è protetto da password. Aprilo, salvalo s
 error.texto_vacio = Nessun testo inserito.
 error.png = L'immagine non è un PNG valido.
 error.png_entrelazado = I PNG interlacciati non sono supportati. Salva l'immagine senza interlacciamento.
+error.sin_certificado = Nessun certificato selezionato.
+error.certificado = Impossibile leggere il certificato (.p12/.pfx).
+error.contrasena_certificado = La password del certificato non è corretta.
+error.certificado_caducado = Il certificato è scaduto.
+error.certificado_no_vigente = Il certificato non è ancora valido.
+error.firma = Impossibile creare la firma digitale.
+error.firma_cifrado = Il documento è protetto da password. Salvalo senza protezione prima di firmarlo.
+error.ya_firmado = Il documento ha già una firma digitale. Questa versione supporta una sola firma per documento.
 error.desconocido = Errore imprevisto.
 
 # Módulos de páginas
@@ -97,6 +111,31 @@ param.angulo.90 = 90° in senso orario
 param.angulo.180 = 180°
 param.angulo.270 = 90° in senso antiorario
 param.posicion = Nuova posizione:
+
+# Nuevo PDF
+modulo.nuevo.nombre = Nuovo PDF
+param.tamano_nuevo = Dimensione della pagina:
+param.tamano_nuevo.a4 = A4 (210 × 297 mm)
+param.tamano_nuevo.carta = Lettera (216 × 279 mm)
+param.tamano_nuevo.oficio = Legal (216 × 356 mm)
+param.tamano_nuevo.a5 = A5 (148 × 210 mm)
+param.tamano_nuevo.a3 = A3 (297 × 420 mm)
+param.orientacion = Orientamento:
+param.orientacion.vertical = Verticale
+param.orientacion.horizontal = Orizzontale
+
+# Páginas en blanco y duplicar
+modulo.insertar_blanco.nombre = Inserisci pagina _bianca…
+modulo.duplicar.nombre = D_uplica pagine…
+param.donde_blanco = Posizione:
+param.donde_blanco.despues = Dopo la pagina corrente
+param.donde_blanco.antes = Prima della pagina corrente
+param.donde_blanco.final = Alla fine
+param.tamano_pagina = Dimensione:
+param.tamano_pagina.igual = Come la pagina corrente
+param.tamano_pagina.a4 = A4 (210 × 297 mm)
+param.tamano_pagina.carta = Lettera (216 × 279 mm)
+param.copias = Copie di ogni pagina:
 
 # Texto
 modulo.texto.nombre = Aggiungi _testo…
@@ -120,12 +159,25 @@ color.morado = Viola
 color.gris = Grigio
 
 # Firma
+modulo.insertar_imagen.nombre = Inserisci _immagine (PNG)…
 modulo.firma_visual.nombre = Firma _visiva (immagine PNG)…
 param.imagen = Immagine PNG:
 param.ancho_mm = Larghezza (mm):
 param.fondo = Sfondo bianco:
 param.fondo.quitar_blanco = Rimuovi (trasparente)
 param.fondo.conservar = Mantieni
+
+# Firma digital
+modulo.firma_digital.nombre = Firma _digitale con certificato…
+param.certificado = Certificato (.p12/.pfx):
+param.contrasena = Password del certificato:
+param.aspecto = Aspetto:
+param.aspecto.texto = Riquadro con nome e data
+param.aspecto.imagen = Immagine PNG della firma
+param.aspecto.invisible = Invisibile
+param.imagen_firma = Immagine (se si sceglie l'immagine):
+firma.aspecto.firmado_por = Firmato digitalmente da:
+firma.aspecto.fecha = Data: {1}
 
 # Módulos de documento
 modulo.fusionar.nombre = _Unisci con altri PDF…
@@ -144,6 +196,7 @@ param.nombre = Nome base:
 
 mensaje.separado = Creati {1} file in {2}.
 mensaje.extraido = Creato {1}.
+mensaje.firmado = Documento firmato da {1}.\n\nSalvalo ora con File › Salva come. Qualsiasi modifica successiva al documento invaliderebbe la firma.
 
 cli.uso = Uso: ibanascapdf [opzioni] [file.pdf]\n\n  -h, --help      Mostra questo aiuto\n  -v, --version   Mostra la versione\n  --list          Elenca i moduli disponibili
 cli.opcion_desconocida = Opzione sconosciuta: {1}

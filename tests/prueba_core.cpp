@@ -4,6 +4,7 @@
  */
 #include <ibanascapdfcore/claves.h>
 #include <ibanascapdfcore/error.h>
+#include <ibanascapdfcore/firma.h>
 #include <ibanascapdfcore/imagen.h>
 #include <ibanascapdfcore/idioma.h>
 #include <ibanascapdfcore/modulo.h>
@@ -108,6 +109,28 @@ int main() {
         bool error = false;
         try { ibz::leerPng(std::string_view("no es png")); } catch (const ibz::Error&) { error = true; }
         comprobar(error, "PNG no válido");
+    }
+
+    // Firma CMS sobre un PDF mínimo con el relleno de /ByteRange y /Contents.
+    {
+        const ibz::Firmante f(std::filesystem::path(IBZ_DATOS_PRUEBA) / "firma_prueba.p12", "prueba");
+        comprobar(f.nombre() == "Firmante de Prueba Ñandú", "nombre del firmante (UTF-8)");
+        const std::string cab = "%PDF-1.7\n1 0 obj << /ByteRange [ 9999999999 9999999999 9999999999 9999999999 ] /Contents <";
+        const std::string pie = "> /Type /Sig >> endobj\ntrailer << >>\n%%EOF\n";
+        std::string texto = cab + std::string(2 * ibz::kBytesFirma, '0') + pie;
+        std::vector<unsigned char> pdf(texto.begin(), texto.end());
+        ibz::completarFirma(pdf, f);
+        const std::string r(pdf.begin(), pdf.end());
+        const std::size_t a = cab.size() - 1;
+        const std::size_t b = a + 2 + 2 * ibz::kBytesFirma;
+        const std::string rango = "[ 0 " + std::to_string(a) + " " + std::to_string(b) + " " + std::to_string(r.size() - b);
+        comprobar(r.find(rango) != std::string::npos, "ByteRange calculado");
+        comprobar(r.compare(a + 1, 4, "3082") == 0, "Contents con CMS (SEQUENCE DER)");
+        comprobar(r.size() == texto.size(), "tamaño del PDF sin cambios");
+        bool error = false;
+        try { ibz::Firmante mala(std::filesystem::path(IBZ_DATOS_PRUEBA) / "firma_prueba.p12", "otra"); }
+        catch (const ibz::Error& e) { error = e.clave() == "error.contrasena_certificado"; }
+        comprobar(error, "contraseña incorrecta");
     }
 
     if (fallos == 0) std::printf("Todas las pruebas correctas\n");

@@ -5,6 +5,8 @@ file(GLOB IBZ_MODULOS CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/modules/
 add_library(ibanascapdfcore OBJECT
     src/claves.cpp
     src/documento.cpp
+    src/firma.cpp
+    src/firma_cms.cpp
     src/idioma.cpp
     src/imagen.cpp
     src/modulo.cpp
@@ -16,7 +18,7 @@ add_library(ibanascapdfcore OBJECT
 
 target_include_directories(ibanascapdfcore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(ibanascapdfcore
-    PUBLIC PDFium::PDFium PkgConfig::QPDF ZLIB::ZLIB
+    PUBLIC PDFium::PDFium PkgConfig::QPDF PkgConfig::GNUTLS ZLIB::ZLIB
     PRIVATE ibz_opciones)
 if(WIN32)
     target_link_libraries(ibanascapdfcore PUBLIC shell32)

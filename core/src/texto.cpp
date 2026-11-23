@@ -7,6 +7,8 @@
 #include "ibanascapdfcore/documento.h"
 #include "ibanascapdfcore/error.h"
 
+#include "pdf_interno.h"
+
 #include <qpdf/Buffer.hh>
 #include <qpdf/QPDF.hh>
 #include <qpdf/QPDFObjectHandle.hh>
@@ -38,6 +40,19 @@ char aCp1252(char32_t c) {
     return '?';
 }
 
+/// Nombre PostScript de la fuente estándar y su ascendente (fracción del tamaño).
+void fuenteEstandar(const std::string& id, const char*& nombre, double& ascendente) {
+    if (id == "helvetica_negrita") { nombre = "/Helvetica-Bold"; ascendente = 0.718; }
+    else if (id == "times") { nombre = "/Times-Roman"; ascendente = 0.683; }
+    else if (id == "times_negrita") { nombre = "/Times-Bold"; ascendente = 0.676; }
+    else if (id == "courier") { nombre = "/Courier"; ascendente = 0.629; }
+    else { nombre = "/Helvetica"; ascendente = 0.718; }
+}
+
+} // namespace
+
+namespace interno {
+
 /// Cadena literal de PDF: escapa ( ) \ y escribe en octal los bytes no ASCII.
 std::string literalPdf(const std::string& winansi) {
     std::string r;
@@ -61,16 +76,14 @@ std::string literalPdf(const std::string& winansi) {
     return r;
 }
 
-/// Nombre PostScript de la fuente estándar y su ascendente (fracción del tamaño).
-void fuenteEstandar(const std::string& id, const char*& nombre, double& ascendente) {
-    if (id == "helvetica_negrita") { nombre = "/Helvetica-Bold"; ascendente = 0.718; }
-    else if (id == "times") { nombre = "/Times-Roman"; ascendente = 0.683; }
-    else if (id == "times_negrita") { nombre = "/Times-Bold"; ascendente = 0.676; }
-    else if (id == "courier") { nombre = "/Courier"; ascendente = 0.629; }
-    else { nombre = "/Helvetica"; ascendente = 0.718; }
+int rotacionPagina(QPDFObjectHandle pagina) {
+    QPDFPageObjectHelper p(pagina);
+    QPDFObjectHandle rot = p.getAttribute("/Rotate", false);
+    if (!rot.isInteger()) return 0;
+    return ((static_cast<int>(rot.getIntValue()) % 360) + 360) % 360;
 }
 
-} // namespace
+} // namespace interno
 
 std::string numeroPdf(double v) {
     if (!std::isfinite(v)) v = 0.0;
@@ -128,9 +141,7 @@ void escribirTexto(Documento& doc, int pagina, double x, double y, const Opcione
         QPDFPageObjectHelper& p = paginas[static_cast<std::size_t>(pagina)];
 
         // Rotación de la página: el texto se gira lo mismo para verse horizontal.
-        int rotacion = 0;
-        QPDFObjectHandle rot = p.getAttribute("/Rotate", false);
-        if (rot.isInteger()) rotacion = ((static_cast<int>(rot.getIntValue()) % 360) + 360) % 360;
+        const int rotacion = interno::rotacionPagina(p.getObjectHandle());
         const double rad = rotacion * 3.14159265358979323846 / 180.0;
         const double c = std::cos(rad);
         const double s = std::sin(rad);
@@ -178,7 +189,7 @@ void escribirTexto(Documento& doc, int pagina, double x, double y, const Opcione
             std::string_view linea = resto.substr(0, fin);
             if (!linea.empty() && linea.back() == '\r') linea.remove_suffix(1);
             if (!primera) cs += "T*\n";
-            cs += literalPdf(aWinAnsi(linea)) + " Tj\n";
+            cs += interno::literalPdf(aWinAnsi(linea)) + " Tj\n";
             primera = false;
             if (fin == std::string_view::npos) break;
             resto.remove_prefix(fin + 1);

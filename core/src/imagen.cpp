@@ -9,6 +9,8 @@
 #include "ibanascapdfcore/rutas.h"
 #include "ibanascapdfcore/texto.h"
 
+#include "pdf_interno.h"
+
 #include <qpdf/Buffer.hh>
 #include <qpdf/QPDF.hh>
 #include <qpdf/QPDFObjectHandle.hh>
@@ -270,6 +272,33 @@ void quitarFondoBlanco(ImagenRaster& img) {
     }
 }
 
+QPDFObjectHandle interno::xobjetoImagen(QPDF& pdf, const ImagenRaster& img) {
+    // Imagen sin comprimir: QPDFWriter la comprime con Flate al escribir.
+    const auto aCadena = [](const std::vector<std::uint8_t>& v) {
+        return std::string(reinterpret_cast<const char*>(v.data()), v.size());
+    };
+    QPDFObjectHandle imagen = QPDFObjectHandle::newStream(&pdf, aCadena(img.color));
+    QPDFObjectHandle dic = imagen.getDict();
+    dic.replaceKey("/Type", QPDFObjectHandle::newName("/XObject"));
+    dic.replaceKey("/Subtype", QPDFObjectHandle::newName("/Image"));
+    dic.replaceKey("/Width", QPDFObjectHandle::newInteger(img.ancho));
+    dic.replaceKey("/Height", QPDFObjectHandle::newInteger(img.alto));
+    dic.replaceKey("/ColorSpace", QPDFObjectHandle::newName(img.canales == 1 ? "/DeviceGray" : "/DeviceRGB"));
+    dic.replaceKey("/BitsPerComponent", QPDFObjectHandle::newInteger(8));
+    if (!img.alfa.empty()) {
+        QPDFObjectHandle mascara = QPDFObjectHandle::newStream(&pdf, aCadena(img.alfa));
+        QPDFObjectHandle dm = mascara.getDict();
+        dm.replaceKey("/Type", QPDFObjectHandle::newName("/XObject"));
+        dm.replaceKey("/Subtype", QPDFObjectHandle::newName("/Image"));
+        dm.replaceKey("/Width", QPDFObjectHandle::newInteger(img.ancho));
+        dm.replaceKey("/Height", QPDFObjectHandle::newInteger(img.alto));
+        dm.replaceKey("/ColorSpace", QPDFObjectHandle::newName("/DeviceGray"));
+        dm.replaceKey("/BitsPerComponent", QPDFObjectHandle::newInteger(8));
+        dic.replaceKey("/SMask", mascara);
+    }
+    return imagen;
+}
+
 void insertarImagen(Documento& doc, int pagina, double x, double y, double anchoPt, const ImagenRaster& img) {
     if (!doc.abierto()) throw Error("error.sin_documento");
     if (pagina < 0 || pagina >= doc.paginas()) throw Error("error.rangos");
@@ -287,36 +316,12 @@ void insertarImagen(Documento& doc, int pagina, double x, double y, double ancho
         std::vector<QPDFPageObjectHelper> paginas = QPDFPageDocumentHelper(pdf).getAllPages();
         QPDFPageObjectHelper& p = paginas[static_cast<std::size_t>(pagina)];
 
-        int rotacion = 0;
-        QPDFObjectHandle rot = p.getAttribute("/Rotate", false);
-        if (rot.isInteger()) rotacion = ((static_cast<int>(rot.getIntValue()) % 360) + 360) % 360;
+        const int rotacion = interno::rotacionPagina(p.getObjectHandle());
         const double rad = rotacion * 3.14159265358979323846 / 180.0;
         const double c = std::cos(rad);
         const double s = std::sin(rad);
 
-        // Imagen sin comprimir: QPDFWriter la comprime con Flate al escribir.
-        const auto aCadena = [](const std::vector<std::uint8_t>& v) {
-            return std::string(reinterpret_cast<const char*>(v.data()), v.size());
-        };
-        QPDFObjectHandle imagen = QPDFObjectHandle::newStream(&pdf, aCadena(img.color));
-        QPDFObjectHandle dic = imagen.getDict();
-        dic.replaceKey("/Type", QPDFObjectHandle::newName("/XObject"));
-        dic.replaceKey("/Subtype", QPDFObjectHandle::newName("/Image"));
-        dic.replaceKey("/Width", QPDFObjectHandle::newInteger(img.ancho));
-        dic.replaceKey("/Height", QPDFObjectHandle::newInteger(img.alto));
-        dic.replaceKey("/ColorSpace", QPDFObjectHandle::newName(img.canales == 1 ? "/DeviceGray" : "/DeviceRGB"));
-        dic.replaceKey("/BitsPerComponent", QPDFObjectHandle::newInteger(8));
-        if (!img.alfa.empty()) {
-            QPDFObjectHandle mascara = QPDFObjectHandle::newStream(&pdf, aCadena(img.alfa));
-            QPDFObjectHandle dm = mascara.getDict();
-            dm.replaceKey("/Type", QPDFObjectHandle::newName("/XObject"));
-            dm.replaceKey("/Subtype", QPDFObjectHandle::newName("/Image"));
-            dm.replaceKey("/Width", QPDFObjectHandle::newInteger(img.ancho));
-            dm.replaceKey("/Height", QPDFObjectHandle::newInteger(img.alto));
-            dm.replaceKey("/ColorSpace", QPDFObjectHandle::newName("/DeviceGray"));
-            dm.replaceKey("/BitsPerComponent", QPDFObjectHandle::newInteger(8));
-            dic.replaceKey("/SMask", mascara);
-        }
+        QPDFObjectHandle imagen = interno::xobjetoImagen(pdf, img);
 
         QPDFObjectHandle recursos = p.getAttribute("/Resources", true);
         if (!recursos.isDictionary()) {

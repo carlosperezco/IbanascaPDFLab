@@ -47,6 +47,16 @@ public:
      */
     void abrir(const std::filesystem::path& ruta, const std::string& contrasena = {});
 
+    /**
+     * @brief Abre un PDF creado en memoria (Archivo › Nuevo), sin archivo de origen.
+     * @param nombre Nombre que se muestra (p. ej. "Sin título.pdf"); el documento
+     *               queda como modificado hasta que se guarde.
+     */
+    void nuevo(Bytes&& datos, const std::string& nombre);
+
+    /// true si el documento se creó con nuevo() y aún no se ha guardado.
+    bool esNuevo() const noexcept { return esNuevo_; }
+
     /// Cierra el documento y vacía la pila de deshacer.
     void cerrar() noexcept;
 
@@ -117,6 +127,7 @@ private:
     std::filesystem::path ruta_;
     std::string contrasena_;
     bool modificado_ = false;
+    bool esNuevo_ = false;
 };
 
 } // namespace ibz

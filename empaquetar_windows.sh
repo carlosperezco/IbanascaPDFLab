@@ -3,8 +3,14 @@
 # las licencias. Con --instalador genera además el instalador NSIS en instalador/.
 #
 # Ejecutar en MSYS2, terminal UCRT64:
-#   ./empaquetar_windows.sh               # solo dist/
-#   ./empaquetar_windows.sh --instalador  # dist/ + instalador
+#   ./empaquetar_windows.sh                          # solo dist/
+#   ./empaquetar_windows.sh --instalador             # dist/ + instalador
+#   ./empaquetar_windows.sh --instalador --fuentes   # + código fuente de los paquetes
+#                                                    #   GPL/LGPL/MPL en instalador/fuentes/
+#
+# Código fuente: las licencias GPL y LGPL obligan a ofrecer el código fuente de esas
+# bibliotecas a quien recibe el instalador. dist/licenses/FUENTES.txt indica dónde
+# está cada uno; con --fuentes se descargan para subirlos junto al instalador.
 set -euo pipefail
 
 raiz="$(cd "$(dirname "$0")" && pwd)"
@@ -16,7 +22,14 @@ if [[ "${MSYSTEM:-}" != "UCRT64" ]]; then
 fi
 
 instalador=0
-[[ "${1:-}" == "--instalador" ]] && instalador=1
+fuentes=0
+for arg in "$@"; do
+    case "$arg" in
+    --instalador) instalador=1 ;;
+    --fuentes) fuentes=1 ;;
+    *) echo "Opción desconocida: $arg" >&2; exit 2 ;;
+    esac
+done
 
 build="$raiz/build"
 dist="$raiz/dist"
@@ -84,7 +97,12 @@ echo "   $(wc -l < "$lista_dll") DLL copiadas"
 # --- Licencias de los paquetes de MSYS2 incluidos.
 echo "== Copiando licencias"
 lista="$dist/licenses/LISTA.txt"
+lista_fuentes="$dist/licenses/FUENTES.txt"
+aviso_gpl="$dist/licenses/AVISO_GPL.txt"
+copyleft="$(mktemp)"
 printf 'Paquete\tVersión\tLicencia\n' > "$lista"
+printf 'Código fuente de cada paquete de MSYS2 incluido (paquete, dirección)\n' > "$lista_fuentes"
+: > "$aviso_gpl"
 {
     cat "$lista_dll"
     find "$dist/lib/gdk-pixbuf-2.0" -name '*.dll' | sed "s|^$dist/lib|$prefijo/lib|"
@@ -96,6 +114,21 @@ done | sort -u | while read -r paquete; do
     version="$(pacman -Q "$paquete" | awk '{print $2}')"
     licencia="$(pacman -Qi "$paquete" | awk -F': ' '/^Licenses/ {print $2}')"
     printf '%s\t%s\t%s\n' "$paquete" "$version" "$licencia" >> "$lista"
+
+    # Paquete base real (los paquetes divididos comparten código fuente: gcc-libs → mingw-w64-gcc).
+    desc="/var/lib/pacman/local/$paquete-$version/desc"
+    pkgbase="$(awk '/^%BASE%/ {getline; print; exit}' "$desc" 2>/dev/null || true)"
+    [[ -z "$pkgbase" ]] && pkgbase="mingw-w64-$base"
+    url="https://mirror.msys2.org/mingw/sources/$pkgbase-$version.src.tar.zst"
+    printf '%s\t%s\n' "$paquete" "$url" >> "$lista_fuentes"
+    if [[ "$licencia" =~ GPL|MPL ]]; then
+        echo "$url" >> "$copyleft"
+        # GPL sin alternativa LGPL ni «or»: hay que publicar su código fuente con el instalador.
+        if [[ "$licencia" =~ GPL && ! "$licencia" =~ LGPL && ! "$licencia" =~ (^|[[:space:]])(OR|or)([[:space:]]|$) &&
+              ! "$licencia" =~ [Ee]xception ]]; then
+            printf '%s\t%s\t%s\n' "$paquete" "$version" "$licencia" >> "$aviso_gpl"
+        fi
+    fi
     if [[ -d "$prefijo/share/licenses/$base" ]]; then
         cp -r "$prefijo/share/licenses/$base" "$dist/licenses/"
     fi
@@ -111,6 +144,12 @@ printf 'pdfium (bblanchon/pdfium-binaries)\t%s\tBSD-3-Clause / Apache-2.0 (ver l
 
 echo "== dist/ listo: $(du -sh "$dist" | cut -f1)"
 echo "   Revise la lista de licencias: dist/licenses/LISTA.txt"
+if [[ -s "$aviso_gpl" ]]; then
+    echo "   AVISO: paquetes solo GPL incluidos (publique su código fuente con el instalador):"
+    sed 's/^/     /' "$aviso_gpl"
+else
+    rm -f "$aviso_gpl"
+fi
 
 if [[ $instalador -eq 1 ]]; then
     echo "== Generando instalador NSIS"
@@ -119,3 +158,22 @@ if [[ $instalador -eq 1 ]]; then
     rm -rf "$raiz/instalador/_CPack_Packages"
     ls -1 "$raiz"/instalador/*.exe
 fi
+
+if [[ $fuentes -eq 1 ]]; then
+    echo "== Descargando código fuente de los paquetes GPL/LGPL/MPL"
+    destino="$raiz/instalador/fuentes"
+    mkdir -p "$destino"
+    curl_windows="/c/Windows/System32/curl.exe"
+    sort -u "$copyleft" | while read -r url; do
+        archivo="$destino/$(basename "$url")"
+        [[ -f "$archivo" ]] && continue
+        echo "   $(basename "$url")"
+        if ! curl -fsSL --retry 3 -o "$archivo" "$url" 2>/dev/null; then
+            # El curl de Windows usa los certificados del sistema (antivirus, proxy).
+            [[ -x "$curl_windows" ]] && "$curl_windows" -fsSL --retry 3 -o "$archivo" "$url" ||
+                { rm -f "$archivo"; echo "     no se pudo descargar: $url" >&2; }
+        fi
+    done
+    echo "   $(ls "$destino" | wc -l) archivos en instalador/fuentes/ ($(du -sh "$destino" | cut -f1))"
+fi
+rm -f "$copyleft"

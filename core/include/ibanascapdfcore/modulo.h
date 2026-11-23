@@ -41,7 +41,8 @@ enum class TipoParametro {
     Carpeta,     ///< carpeta; valor: ruta UTF-8
     TextoLargo,  ///< texto de varias líneas
     Color,       ///< color; valor "#rrggbb"
-    ArchivoImagen ///< imagen PNG; valor: ruta UTF-8
+    ArchivoImagen,     ///< imagen PNG; valor: ruta UTF-8
+    ArchivoCertificado ///< certificado .p12/.pfx; valor: ruta UTF-8
 };
 
 /// Descripción de un parámetro de un módulo.
@@ -102,6 +103,13 @@ public:
      * (punto pulsado, en puntos PDF del espacio de usuario de la página).
      */
     virtual bool requierePosicion() const { return false; }
+    /**
+     * @brief true si, con los valores elegidos, hace falta un clic en la página
+     *        después del diálogo (por ejemplo, firma digital visible).
+     *
+     * La interfaz añade entonces "pagina", "x" e "y" como en requierePosicion().
+     */
+    virtual bool posicionTrasDialogo(const Valores&) const { return false; }
     /**
      * @brief Ejecuta la operación. Lanza ibz::Error si falla.
      * @return Mensaje ya traducido para el usuario, o cadena vacía.

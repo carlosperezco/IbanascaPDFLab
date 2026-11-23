@@ -4,6 +4,66 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] - 2026-11-23
+
+First public release.
+
+### Added
+- PDF viewer (PDFium): continuous scrolling, zoom, fit width / fit page, thumbnails,
+  go to page, password-protected PDFs, drag and drop.
+- Pages (QPDF): rotate, move, delete, duplicate, insert blank pages, reorder by
+  dragging thumbnails.
+- File › New: new PDF with a blank page (A4, Letter, Legal, A5 or A3; portrait or landscape).
+- Document: merge PDFs; split by page or by ranges, or extract pages to another PDF.
+- Add text with the standard PDF fonts; insert PNG images.
+- Digital signature PAdES-B-B with a `.p12`/`.pfx` certificate (GnuTLS), visible
+  (name and date, or PNG image) or invisible; visual signature with a PNG image.
+- Undo / redo; the original file is never overwritten.
+- Interface in English, Spanish and Italian; command line `--version`, `--help`, `--list`.
+- Windows installer (NSIS) with the licenses and the source code of the bundled
+  libraries.
+- Green icon with a turtle in the background (DonatellaTech colours).
+- Own About dialog: all its texts follow the language chosen in the Language menu,
+  also when it is changed while the program is open.
+
+### Known limitations
+- One digital signature per document; no timestamp.
+- Standard PDF fonts only (Western European characters); existing text cannot be edited.
+
+## [0.0.7] - 2026-11-23
+
+### Added
+- Pages › Insert Blank Page: before or after the current page or at the end; same
+  size as the current page, A4 or Letter.
+- Pages › Duplicate Pages (Ctrl+D): each copy goes right after its original; copies
+  share the content (the file barely grows); annotations are not copied.
+- About dialog and README: origin of the name Ibanasca.
+
+### Changed
+- Language is now a menu of its own in the main menu bar (it was inside View).
+- `empaquetar_windows.sh`: writes `licenses/FUENTES.txt` (source code address of every
+  bundled package) and `licenses/AVISO_GPL.txt` (GPL-only packages); new option
+  `--fuentes` downloads the GPL/LGPL/MPL source archives to `instalador/fuentes/`
+  to publish them with each release.
+- THIRD_PARTY_NOTICES: source code of the bundled libraries and the GPL-2.0 jbigkit
+  component (pulled in by GTK through GdkPixbuf → libtiff).
+
+## [0.0.6] - 2026-11-23
+
+### Added
+- Sign › Digital Signature with Certificate: PAdES-B-B signature
+  (`ETSI.CAdES.detached`, SHA-256, `signing-certificate-v2`, no `signing-time`)
+  with a `.p12`/`.pfx` certificate, made with GnuTLS (already a QPDF dependency)
+  and QPDF, without PoDoFo or OpenSSL. Appearance: box with name and date, PNG
+  image of the handwritten signature, or invisible. Visible signatures are placed
+  with a click after the dialog and stay upright on rotated pages.
+- Checks: wrong certificate password, expired or not yet valid certificate,
+  already signed document, password-protected document.
+- Test certificate (`tests/datos/firma_prueba.p12`, fictitious) and signing tests.
+
+### Known limitations
+- One signature per document (QPDF rewrites the whole file); no timestamp.
+
 ## [0.0.5] - 2026-11-23
 
 ### Added
@@ -11,6 +71,8 @@ and the project follows [Semantic Versioning](https://semver.org/).
   in millimetres (the height keeps the proportion) and whether to remove the white
   background (useful for scanned or photographed signatures). Works on rotated
   pages and can be undone.
+- Pages › Insert Image (PNG) (Ctrl+I): inserts the whole PNG as it is (keeps its own
+  transparency, no background removal), with the width in millimetres.
 - Own PNG reader (grey, grey+alpha, RGB, RGBA and palette; 1 to 16 bits;
   transparency) using zlib, already a QPDF dependency: no new libraries.
 

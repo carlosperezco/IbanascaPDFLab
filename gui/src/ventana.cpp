@@ -23,6 +23,7 @@
 #include <ibanascapdfcore/rutas.h>
 
 #include <gtk/gtk.h>
+#include <libintl.h>
 
 #include <algorithm>
 #include <cmath>
@@ -30,6 +31,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -39,6 +41,20 @@ namespace ibz::gui {
 namespace {
 
 constexpr double kPasoZoom = 1.2;
+
+/**
+ * @brief Cambia también el idioma de los textos propios de GTK (botones de «Acerca de», etc.).
+ *
+ * GTK traduce con gettext según LANGUAGE. gettext guarda en caché las traducciones
+ * ya usadas; volver a fijar el dominio con textdomain() es la forma documentada de
+ * invalidar esa caché, de modo que los diálogos nuevos salen en el idioma elegido.
+ */
+void aplicarIdiomaGtk(const std::string& codigo) {
+    g_setenv("LANGUAGE", codigo.c_str(), TRUE);
+    const char* dominio = textdomain(nullptr);
+    const std::string actual = dominio ? dominio : "messages";
+    textdomain(actual.c_str());
+}
 /// Menús propios de los módulos (las operaciones de "paginas" se repiten en Editar).
 const char* const kMenusModulos[] = {"paginas", "documento", "firma"};
 
@@ -67,6 +83,7 @@ private:
     void textosBienvenida();
 
     // Acciones
+    void accionNuevo();
     void accionAbrir();
     bool accionGuardarComo();
     void accionCerrar();
@@ -77,6 +94,7 @@ private:
     void agregarModulos(GtkWidget* menu, const char* grupo, bool conAtajos);
     void ejecutarModulo(const Modulo& m);
     void ejecutarConValores(const Modulo& m, Valores v);
+    void ejecutarDirecto(const Modulo& m, Valores v);
     void colocar(int pagina, int x, int y, int ancho, int alto);
     void moverPorArrastre(int origen, int destino);
     void cambiarIdioma(const std::string& codigo);
@@ -121,6 +139,8 @@ private:
     GtkWidget* itemRehacer_ = nullptr;
     std::string idiomaPendiente_;
     const Modulo* moduloPendiente_ = nullptr; ///< espera el clic en la página (modo colocar)
+    Valores valoresPendientes_;               ///< valores ya elegidos (clic después del diálogo)
+    bool dialogoHecho_ = false;               ///< el clic completa un diálogo ya respondido
     fs::path rutaSoltada_;
 };
 
@@ -184,6 +204,8 @@ Ventana::Ventana(const Claves& config, Claves& ajustes) : config_(config), ajust
     visor_->alColocar = [this](int pagina, int x, int y, int ancho, int alto) { colocar(pagina, x, y, ancho, alto); };
     visor_->alCancelarColocar = [this] {
         moduloPendiente_ = nullptr;
+        dialogoHecho_ = false;
+        valoresPendientes_.clear();
         actualizarEstado();
     };
     miniaturas_->alMover = [this](int origen, int destino) { moverPorArrastre(origen, destino); };
@@ -237,6 +259,7 @@ void Ventana::construirMenus() {
     barra_ = gtk_menu_bar_new();
 
     GtkWidget* m = menu(barra_, "menu.archivo");
+    item(m, "accion.nuevo", [this] { accionNuevo(); }, GDK_KEY_n, ctrl);
     item(m, "accion.abrir", [this] { accionAbrir(); }, GDK_KEY_o, ctrl);
     item(m, "accion.guardar_como", [this] { accionGuardarComo(); }, GDK_KEY_s,
          GdkModifierType(GDK_CONTROL_MASK | GDK_SHIFT_MASK), true);
@@ -268,12 +291,16 @@ void Ventana::construirMenus() {
     item(m, "accion.primera_pagina", [this] { visor_->irAPagina(0); }, GDK_KEY_Home, ctrl, true);
     item(m, "accion.ultima_pagina", [this] { visor_->irAPagina(doc_.paginas() - 1); }, GDK_KEY_End, ctrl, true);
     item(m, "accion.ir_a_pagina", [this] { accionIrAPagina(); }, GDK_KEY_g, ctrl, true);
-    gtk_menu_shell_append(GTK_MENU_SHELL(m), gtk_separator_menu_item_new());
 
-    GtkWidget* idioma = gtk_menu_item_new_with_mnemonic(tr("menu.idioma").c_str());
-    GtkWidget* subIdioma = gtk_menu_new();
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(idioma), subIdioma);
-    gtk_menu_shell_append(GTK_MENU_SHELL(m), idioma);
+    // Menús de los módulos registrados (solo los que tienen alguno).
+    for (const char* nombreMenu : kMenusModulos) {
+        const bool hay = std::any_of(Registro::instancia().modulos().begin(), Registro::instancia().modulos().end(),
+                                     [&](const auto& mod) { return std::strcmp(mod->menu(), nombreMenu) == 0; });
+        if (hay) agregarModulos(menu(barra_, ("menu." + std::string(nombreMenu)).c_str()), nombreMenu, true);
+    }
+
+    // Idioma: menú propio en la barra principal, antes de Ayuda.
+    GtkWidget* subIdioma = menu(barra_, "menu.idioma");
     GSList* grupo = nullptr;
     for (const auto& [codigo, nombre] : Idioma::disponibles()) {
         GtkWidget* r = gtk_radio_menu_item_new_with_label(grupo, nombre.c_str());
@@ -283,13 +310,6 @@ void Ventana::construirMenus() {
         acciones_.push_back(std::make_unique<Accion>(Accion{[this, c] { cambiarIdioma(c); }}));
         g_signal_connect(r, "toggled", G_CALLBACK(alAlternar), acciones_.back().get());
         gtk_menu_shell_append(GTK_MENU_SHELL(subIdioma), r);
-    }
-
-    // Menús de los módulos registrados (solo los que tienen alguno).
-    for (const char* nombreMenu : kMenusModulos) {
-        const bool hay = std::any_of(Registro::instancia().modulos().begin(), Registro::instancia().modulos().end(),
-                                     [&](const auto& mod) { return std::strcmp(mod->menu(), nombreMenu) == 0; });
-        if (hay) agregarModulos(menu(barra_, ("menu." + std::string(nombreMenu)).c_str()), nombreMenu, true);
     }
 
     m = menu(barra_, "menu.ayuda");
@@ -386,14 +406,65 @@ void Ventana::abrir(const fs::path& ruta) {
     documentoCambiado(false);
 }
 
+/// Parámetros del diálogo «Nuevo PDF» (usa el diálogo genérico de los módulos).
+class NuevoPdf final : public Modulo {
+public:
+    const char* id() const override { return "nuevo"; }
+    const char* menu() const override { return "archivo"; }
+    std::vector<Parametro> parametros() const override {
+        Parametro tamano;
+        tamano.id = "tamano";
+        tamano.clave = "param.tamano_nuevo";
+        tamano.tipo = TipoParametro::Opcion;
+        tamano.opciones = {"a4", "carta", "oficio", "a5", "a3"};
+        tamano.defecto = "a4";
+
+        Parametro orientacion;
+        orientacion.id = "orientacion";
+        orientacion.clave = "param.orientacion";
+        orientacion.tipo = TipoParametro::Opcion;
+        orientacion.opciones = {"vertical", "horizontal"};
+        orientacion.defecto = "vertical";
+        return {tamano, orientacion};
+    }
+    std::string ejecutar(Documento&, const Valores&) const override { return {}; }
+};
+
+void Ventana::accionNuevo() {
+    if (!confirmarDescartar()) return;
+    static const NuevoPdf dialogo;
+    Valores v;
+    ContextoDialogo ctx;
+    ctx.recordados = &ajustes_;
+    if (!pedirParametros(ventana(), dialogo, v, ctx)) return;
+
+    // Tamaños en puntos (1/72"): A4, Carta, Oficio (Legal), A5, A3.
+    const std::string t = v["tamano"];
+    double ancho = 595.276;
+    double alto = 841.89;
+    if (t == "carta") { ancho = 612.0; alto = 792.0; }
+    else if (t == "oficio") { ancho = 612.0; alto = 1008.0; }
+    else if (t == "a5") { ancho = 419.528; alto = 595.276; }
+    else if (t == "a3") { ancho = 841.89; alto = 1190.551; }
+    if (v["orientacion"] == "horizontal") std::swap(ancho, alto);
+    try {
+        doc_.nuevo(crearPdfVacio(ancho, alto), tr("archivo.sin_titulo") + ".pdf");
+    } catch (const Error& e) {
+        mostrarError(ventana(), e);
+        return;
+    }
+    documentoCambiado(false);
+}
+
 void Ventana::accionAbrir() {
     if (auto r = elegirPdfAbrir(ventana(), ajustes_.obtener("ultima_carpeta"))) abrir(*r);
 }
 
 bool Ventana::accionGuardarComo() {
     if (!doc_.abierto()) return false;
-    const std::string nombre = utf8(doc_.ruta().stem()) + tr("archivo.sufijo") + ".pdf";
-    const std::string carpeta = utf8(doc_.ruta().parent_path());
+    const bool nuevo = doc_.esNuevo();
+    const std::string nombre = utf8(doc_.ruta().stem()) + (nuevo ? "" : tr("archivo.sufijo")) + ".pdf";
+    const std::string carpeta = nuevo ? ajustes_.obtener("ultima_carpeta") : utf8(doc_.ruta().parent_path());
     const auto r = elegirPdfGuardar(ventana(), carpeta, nombre);
     if (!r) return false;
     try {
@@ -402,6 +473,7 @@ bool Ventana::accionGuardarComo() {
         mostrarError(ventana(), e);
         return false;
     }
+    ajustes_.poner("ultima_carpeta", utf8(r->parent_path()));
     actualizarEstado();
     return true;
 }
@@ -456,17 +528,24 @@ void Ventana::ejecutarModulo(const Modulo& m) {
 
 void Ventana::colocar(int pagina, int x, int y, int ancho, int alto) {
     const Modulo* m = moduloPendiente_;
+    const bool dialogoHecho = dialogoHecho_;
+    Valores v = std::move(valoresPendientes_);
     moduloPendiente_ = nullptr;
+    dialogoHecho_ = false;
+    valoresPendientes_.clear();
     actualizarEstado();
     if (!m) return;
     double px = 0.0;
     double py = 0.0;
     if (!doc_.dispositivoAPagina(pagina, ancho, alto, x, y, px, py)) return;
-    Valores v;
     v["pagina"] = std::to_string(pagina);
     v["x"] = numeroPdf(px);
     v["y"] = numeroPdf(py);
-    ejecutarConValores(*m, std::move(v));
+    if (dialogoHecho) {
+        ejecutarDirecto(*m, std::move(v));
+    } else {
+        ejecutarConValores(*m, std::move(v));
+    }
 }
 
 void Ventana::ejecutarConValores(const Modulo& m, Valores v) {
@@ -478,6 +557,20 @@ void Ventana::ejecutarConValores(const Modulo& m, Valores v) {
     ctx.recordados = &ajustes_;
     if (!pedirParametros(ventana(), m, v, ctx)) return;
     v["pagina_actual"] = std::to_string(ctx.paginaActual);
+    if (!v.count("pagina") && m.posicionTrasDialogo(v)) {
+        // Diálogo respondido; falta el clic en la página (colocar() termina).
+        moduloPendiente_ = &m;
+        valoresPendientes_ = std::move(v);
+        dialogoHecho_ = true;
+        visor_->empezarColocar();
+        actualizarEstado();
+        return;
+    }
+    ejecutarDirecto(m, std::move(v));
+}
+
+void Ventana::ejecutarDirecto(const Modulo& m, Valores v) {
+    if (v.count("pagina_actual") == 0) v["pagina_actual"] = std::to_string(visor_->paginaActual() + 1);
     std::string mensaje;
     try {
         mensaje = m.ejecutar(doc_, v);
@@ -514,6 +607,7 @@ void Ventana::cambiarIdioma(const std::string& codigo) {
             if (Idioma::global().cargar(v->idiomaPendiente_)) {
                 v->ajustes_.poner("idioma", v->idiomaPendiente_);
                 v->guardarAjustes();
+                aplicarIdiomaGtk(Idioma::global().codigo());
             }
             v->construirMenus();
             v->textosBienvenida();

@@ -5,3 +5,4 @@ help/** linguist-documentation
 tools/** linguist-vendored
 *.png binary
 *.ico binary
+*.p12 binary

@@ -13,6 +13,7 @@ menu.firma = _Sign
 menu.ayuda = _Help
 menu.idioma = _Language
 
+accion.nuevo = _New…
 accion.abrir = _Open…
 accion.guardar_como = Save _As…
 accion.cerrar = _Close
@@ -53,7 +54,9 @@ boton.elegir = _Choose…
 boton.cerrar = _Close
 
 filtro.png = PNG images
+filtro.certificado = Certificates (.p12, .pfx)
 filtro.pdf = PDF documents
+archivo.sin_titulo = Untitled
 archivo.sufijo = -edited
 
 estado.sin_documento = No document
@@ -63,6 +66,9 @@ estado.colocar = Click on the page where you want to place it (Esc cancels).
 estado.zoom = {1} %
 
 bienvenida.mensaje = Open a PDF with File › Open or drag it onto this window.
+acerca.nombre = The name honours Ibanasca, mother of water and protective goddess of the snow-capped mountains in the Pijao culture of Tolima (Colombia). According to tradition, she was burned during the conquest and purified by the god of fire. The project does not claim to represent the deity or to speak for the Pijao people.
+acerca.version = Version {1}
+acerca.licencia = Free software under the MIT license. Provided as is, without any warranty.
 acerca.descripcion = Lightweight, free and open-source PDF editor.
 
 error.titulo = Error
@@ -83,6 +89,14 @@ error.contrasena_archivo = This PDF is password protected. Open it, save it with
 error.texto_vacio = No text was written.
 error.png = The image is not a valid PNG.
 error.png_entrelazado = Interlaced PNGs are not supported. Save the image without interlacing.
+error.sin_certificado = No certificate was chosen.
+error.certificado = The certificate (.p12/.pfx) could not be read.
+error.contrasena_certificado = The certificate password is not correct.
+error.certificado_caducado = The certificate has expired.
+error.certificado_no_vigente = The certificate is not valid yet.
+error.firma = The digital signature could not be created.
+error.firma_cifrado = The document is password protected. Save it without protection before signing it.
+error.ya_firmado = The document already has a digital signature. This version supports a single signature per document.
 error.desconocido = Unexpected error.
 
 # Módulos de páginas
@@ -97,6 +111,31 @@ param.angulo.90 = 90° clockwise
 param.angulo.180 = 180°
 param.angulo.270 = 90° counterclockwise
 param.posicion = New position:
+
+# Nuevo PDF
+modulo.nuevo.nombre = New PDF
+param.tamano_nuevo = Page size:
+param.tamano_nuevo.a4 = A4 (210 × 297 mm)
+param.tamano_nuevo.carta = Letter (8.5 × 11 in)
+param.tamano_nuevo.oficio = Legal (8.5 × 14 in)
+param.tamano_nuevo.a5 = A5 (148 × 210 mm)
+param.tamano_nuevo.a3 = A3 (297 × 420 mm)
+param.orientacion = Orientation:
+param.orientacion.vertical = Portrait
+param.orientacion.horizontal = Landscape
+
+# Páginas en blanco y duplicar
+modulo.insertar_blanco.nombre = Insert _Blank Page…
+modulo.duplicar.nombre = D_uplicate Pages…
+param.donde_blanco = Position:
+param.donde_blanco.despues = After the current page
+param.donde_blanco.antes = Before the current page
+param.donde_blanco.final = At the end
+param.tamano_pagina = Size:
+param.tamano_pagina.igual = Same as the current page
+param.tamano_pagina.a4 = A4 (210 × 297 mm)
+param.tamano_pagina.carta = Letter (8.5 × 11 in)
+param.copias = Copies of each page:
 
 # Texto
 modulo.texto.nombre = Add _Text…
@@ -120,12 +159,25 @@ color.morado = Purple
 color.gris = Gray
 
 # Firma
+modulo.insertar_imagen.nombre = Insert _Image (PNG)…
 modulo.firma_visual.nombre = _Visual Signature (PNG image)…
 param.imagen = PNG image:
 param.ancho_mm = Width (mm):
 param.fondo = White background:
 param.fondo.quitar_blanco = Remove (transparent)
 param.fondo.conservar = Keep
+
+# Firma digital
+modulo.firma_digital.nombre = _Digital Signature with Certificate…
+param.certificado = Certificate (.p12/.pfx):
+param.contrasena = Certificate password:
+param.aspecto = Appearance:
+param.aspecto.texto = Box with name and date
+param.aspecto.imagen = PNG image of the signature
+param.aspecto.invisible = Invisible
+param.imagen_firma = Image (if image is chosen):
+firma.aspecto.firmado_por = Digitally signed by:
+firma.aspecto.fecha = Date: {1}
 
 # Módulos de documento
 modulo.fusionar.nombre = _Merge with Other PDFs…
@@ -144,6 +196,7 @@ param.nombre = Base name:
 
 mensaje.separado = {1} files were created in {2}.
 mensaje.extraido = {1} was created.
+mensaje.firmado = Document signed by {1}.\n\nSave it now with File › Save As. Any later change to the document would invalidate the signature.
 
 cli.uso = Usage: ibanascapdf [options] [file.pdf]\n\n  -h, --help      Show this help\n  -v, --version   Show the version\n  --list          List the available modules
 cli.opcion_desconocida = Unknown option: {1}

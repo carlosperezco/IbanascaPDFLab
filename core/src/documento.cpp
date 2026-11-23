@@ -68,6 +68,17 @@ void Documento::cerrar() noexcept {
     ruta_.clear();
     contrasena_.clear();
     modificado_ = false;
+    esNuevo_ = false;
+}
+
+void Documento::nuevo(Bytes&& datos, const std::string& nombre) {
+    cargar(std::move(datos), {}, nombre);
+    deshacer_.clear();
+    rehacer_.clear();
+    ruta_ = desdeUtf8(nombre);
+    contrasena_.clear();
+    modificado_ = true;
+    esNuevo_ = true;
 }
 
 void Documento::abrir(const fs::path& ruta, const std::string& contrasena) {
@@ -88,6 +99,7 @@ void Documento::abrir(const fs::path& ruta, const std::string& contrasena) {
     ruta_ = ruta;
     contrasena_ = contrasena;
     modificado_ = false;
+    esNuevo_ = false;
 }
 
 void Documento::cargar(Bytes&& datos, const std::string& contrasena, const std::string& detalle) {
@@ -193,7 +205,8 @@ void Documento::guardarComo(const fs::path& ruta) {
     if (!doc_) throw Error("error.sin_documento");
     const std::string nombre = utf8(ruta);
     std::error_code ec;
-    if (fs::exists(ruta, ec) && fs::equivalent(ruta, ruta_, ec)) throw Error("error.sobrescribir_original", nombre);
+    if (!esNuevo_ && fs::exists(ruta, ec) && fs::equivalent(ruta, ruta_, ec))
+        throw Error("error.sobrescribir_original", nombre);
 
     fs::path temporal = ruta;
     temporal += ".tmp";
@@ -211,6 +224,11 @@ void Documento::guardarComo(const fs::path& ruta) {
     if (ec) {
         fs::remove(temporal, ec);
         throw Error("error.escribir", nombre);
+    }
+    if (esNuevo_) {
+        // El documento nuevo pasa a ser este archivo (como si se hubiera abierto).
+        ruta_ = ruta;
+        esNuevo_ = false;
     }
     modificado_ = false;
 }

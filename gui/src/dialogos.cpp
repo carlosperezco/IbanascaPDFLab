@@ -165,16 +165,23 @@ void alElegirCarpeta(GtkButton*, gpointer d) {
     g_object_unref(fc);
 }
 
-void alElegirImagen(GtkButton*, gpointer d) {
+constexpr const char* kFiltroClave = "ibz-filtro-clave";
+constexpr const char* kFiltroPatrones = "ibz-filtro-patrones"; ///< patrones separados por ';'
+
+void alElegirArchivo(GtkButton*, gpointer d) {
     GtkWidget* entrada = GTK_WIDGET(d);
     auto* padre = static_cast<GtkWindow*>(g_object_get_data(G_OBJECT(entrada), kPadre));
     GtkFileChooserNative* fc = gtk_file_chooser_native_new(sinMnemonico(tr("boton.elegir")).c_str(), padre,
                                                            GTK_FILE_CHOOSER_ACTION_OPEN, tr("boton.abrir").c_str(),
                                                            tr("boton.cancelar").c_str());
     GtkFileFilter* f = gtk_file_filter_new();
-    gtk_file_filter_set_name(f, tr("filtro.png").c_str());
-    gtk_file_filter_add_pattern(f, "*.png");
-    gtk_file_filter_add_pattern(f, "*.PNG");
+    gtk_file_filter_set_name(f, tr(static_cast<const char*>(g_object_get_data(G_OBJECT(entrada), kFiltroClave))).c_str());
+    const std::string patrones = static_cast<const char*>(g_object_get_data(G_OBJECT(entrada), kFiltroPatrones));
+    for (std::size_t i = 0; i < patrones.size();) {
+        const std::size_t j = std::min(patrones.find(';', i), patrones.size());
+        gtk_file_filter_add_pattern(f, patrones.substr(i, j - i).c_str());
+        i = j + 1;
+    }
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(fc), f);
     const std::string actual = gtk_entry_get_text(GTK_ENTRY(entrada));
     if (!actual.empty())
@@ -188,16 +195,18 @@ void alElegirImagen(GtkButton*, gpointer d) {
     g_object_unref(fc);
 }
 
-/// Campo con la ruta de una imagen PNG y botón «Elegir…» (TipoParametro::ArchivoImagen).
-GtkWidget* crearImagen(GtkWindow* padre, const std::string& ruta) {
+/// Campo con la ruta de un archivo y botón «Elegir…» (imagen PNG o certificado).
+GtkWidget* crearArchivo(GtkWindow* padre, const std::string& ruta, const char* claveFiltro, const char* patrones) {
     GtkWidget* entrada = gtk_entry_new();
     gtk_entry_set_text(GTK_ENTRY(entrada), ruta.c_str());
     gtk_entry_set_width_chars(GTK_ENTRY(entrada), 36);
     gtk_widget_set_hexpand(entrada, TRUE);
     g_object_set_data(G_OBJECT(entrada), kPadre, padre);
+    g_object_set_data(G_OBJECT(entrada), kFiltroClave, const_cast<char*>(claveFiltro));
+    g_object_set_data(G_OBJECT(entrada), kFiltroPatrones, const_cast<char*>(patrones));
     GtkWidget* caja = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     gtk_box_pack_start(GTK_BOX(caja), entrada, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(caja), boton("boton.elegir", G_CALLBACK(alElegirImagen), entrada), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(caja), boton("boton.elegir", G_CALLBACK(alElegirArchivo), entrada), FALSE, FALSE, 0);
     g_object_set_data(G_OBJECT(caja), kLista, entrada);
     return caja;
 }
@@ -286,7 +295,7 @@ std::string leerColor(GtkWidget* c) {
 /// Tipos cuyo último valor se recuerda entre usos.
 bool seRecuerda(TipoParametro t) {
     return t == TipoParametro::Opcion || t == TipoParametro::Entero || t == TipoParametro::Color ||
-           t == TipoParametro::ArchivoImagen;
+           t == TipoParametro::ArchivoImagen || t == TipoParametro::ArchivoCertificado;
 }
 
 GdkPixbuf* cargarLogo(const Claves& config, int lado) {
@@ -383,15 +392,50 @@ Respuesta preguntarDescartar(GtkWindow* padre) {
 }
 
 void acercaDe(GtkWindow* padre, const Claves& config) {
-    static const gchar* autores[] = {IBZ_AUTOR " <" IBZ_CONTACTO ">", nullptr};
+    // Diálogo propio: todos sus textos vienen de lang/*.lang, así que siguen el
+    // idioma elegido en el menú aunque se cambie con el programa abierto.
     const std::string titulo = config.obtener("titulo", IBZ_NOMBRE);
-    GdkPixbuf* logo = cargarLogo(config, 128);
-    gtk_show_about_dialog(padre, "program-name", titulo.c_str(), "version", IBZ_VERSION, "comments",
-                          tr("acerca.descripcion").c_str(), "copyright",
-                          "Copyright \xC2\xA9 " IBZ_ANIO " " IBZ_AUTOR " (" IBZ_ORGANIZACION ")", "license-type",
-                          GTK_LICENSE_MIT_X11, "website", IBZ_WEB, "website-label", "donatellatech.com", "authors",
-                          autores, "logo", logo, nullptr);
-    if (logo) g_object_unref(logo);
+    GtkWidget* d = gtk_dialog_new_with_buttons(sinMnemonico(tr("accion.acerca_de")).c_str(), padre,
+                                               GtkDialogFlags(GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT),
+                                               tr("boton.cerrar").c_str(), GTK_RESPONSE_CLOSE, nullptr);
+    gtk_window_set_resizable(GTK_WINDOW(d), FALSE);
+
+    GtkWidget* caja = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
+    gtk_container_set_border_width(GTK_CONTAINER(caja), 18);
+    if (GdkPixbuf* logo = cargarLogo(config, 128)) {
+        gtk_box_pack_start(GTK_BOX(caja), gtk_image_new_from_pixbuf(logo), FALSE, FALSE, 0);
+        g_object_unref(logo);
+    }
+    const auto etiqueta = [&](const std::string& marcado, bool ajustar) {
+        GtkWidget* l = gtk_label_new(nullptr);
+        gtk_label_set_markup(GTK_LABEL(l), marcado.c_str());
+        gtk_label_set_justify(GTK_LABEL(l), GTK_JUSTIFY_CENTER);
+        if (ajustar) {
+            gtk_label_set_line_wrap(GTK_LABEL(l), TRUE);
+            gtk_label_set_max_width_chars(GTK_LABEL(l), 56);
+        }
+        gtk_box_pack_start(GTK_BOX(caja), l, FALSE, FALSE, 0);
+    };
+    const auto escapar = [](const std::string& t) {
+        gchar* e = g_markup_escape_text(t.c_str(), -1);
+        std::string r = e;
+        g_free(e);
+        return r;
+    };
+    etiqueta("<span size='x-large' weight='bold'>" + escapar(titulo) + "</span>", false);
+    etiqueta(escapar(formato(tr("acerca.version"), {IBZ_VERSION})), false);
+    etiqueta(escapar(tr("acerca.descripcion")), true);
+    etiqueta("<small>" + escapar(tr("acerca.nombre")) + "</small>", true);
+    etiqueta("<small>" + escapar("Copyright \xC2\xA9 " IBZ_ANIO " " IBZ_AUTOR " (" IBZ_ORGANIZACION ")") + "</small>", true);
+    etiqueta("<small>" + escapar(tr("acerca.licencia")) + "</small>", true);
+    GtkWidget* web = gtk_link_button_new_with_label(IBZ_WEB, "donatellatech.com");
+    gtk_widget_set_halign(web, GTK_ALIGN_CENTER);
+    gtk_box_pack_start(GTK_BOX(caja), web, FALSE, FALSE, 0);
+
+    gtk_container_add(GTK_CONTAINER(gtk_dialog_get_content_area(GTK_DIALOG(d))), caja);
+    gtk_widget_show_all(d);
+    gtk_dialog_run(GTK_DIALOG(d));
+    gtk_widget_destroy(d);
 }
 
 bool pedirParametros(GtkWindow* padre, const Modulo& modulo, Valores& valores, const ContextoDialogo& ctx) {
@@ -468,7 +512,10 @@ bool pedirParametros(GtkWindow* padre, const Modulo& modulo, Valores& valores, c
             gtk_widget_set_halign(c, GTK_ALIGN_START);
             break;
         case TipoParametro::ArchivoImagen:
-            c = crearImagen(padre, defecto);
+            c = crearArchivo(padre, defecto, "filtro.png", "*.png;*.PNG");
+            break;
+        case TipoParametro::ArchivoCertificado:
+            c = crearArchivo(padre, defecto, "filtro.certificado", "*.p12;*.pfx;*.P12;*.PFX");
             break;
         }
         gtk_grid_attach(GTK_GRID(rejilla), etiqueta, 0, fila, 1, 1);
@@ -518,6 +565,7 @@ bool pedirParametros(GtkWindow* padre, const Modulo& modulo, Valores& valores, c
                 valores[ps[i].id] = leerColor(c);
                 break;
             case TipoParametro::ArchivoImagen:
+            case TipoParametro::ArchivoCertificado:
                 valores[ps[i].id] = gtk_entry_get_text(GTK_ENTRY(g_object_get_data(G_OBJECT(c), kLista)));
                 break;
             }
