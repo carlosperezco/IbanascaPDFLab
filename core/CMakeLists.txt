@@ -27,6 +27,7 @@ add_library(ibanascapdfcore OBJECT
     src/idioma.cpp
     src/imagen.cpp
     src/modulo.cpp
+    src/numeros.cpp
     src/operaciones.cpp
     src/rangos.cpp
     src/rutas.cpp

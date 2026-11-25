@@ -8,6 +8,7 @@
 #include "ibanascapdfcore/error.h"
 #include "ibanascapdfcore/texto.h"
 
+#include "numeros.h"
 #include "pdf_interno.h"
 
 #include <qpdf/Buffer.hh>
@@ -18,7 +19,6 @@
 #include <qpdf/QPDFWriter.hh>
 
 #include <algorithm>
-#include <charconv>
 #include <cmath>
 #include <exception>
 #include <limits>
@@ -35,8 +35,7 @@ constexpr std::size_t kMaxPuntos = 200000;
 
 double leerNumero(std::string_view s) {
     double v = 0;
-    const auto [fin, ec] = std::from_chars(s.data(), s.data() + s.size(), v);
-    if (ec != std::errc() || fin != s.data() + s.size() || !std::isfinite(v)) throw Error("error.dibujo");
+    if (!interno::leerReal(s, v)) throw Error("error.dibujo");
     return v;
 }
 
@@ -54,11 +53,7 @@ std::vector<std::string_view> dividir(std::string_view s, char sep) {
 }
 
 std::string numero(double v) {
-    char buf[32];
-    const auto [fin, ec] = std::to_chars(buf, buf + sizeof(buf), v, std::chars_format::fixed, 1);
-    std::string s(buf, ec == std::errc() ? fin : buf);
-    if (s.size() > 2 && s.compare(s.size() - 2, 2, ".0") == 0) s.resize(s.size() - 2);
-    return s.empty() ? "0" : s;
+    return interno::escribirReal(v, 1);
 }
 
 struct Caja {

@@ -7,6 +7,7 @@
 #include "ibanascapdfcore/documento.h"
 #include "ibanascapdfcore/error.h"
 
+#include "numeros.h"
 #include "pdf_interno.h"
 
 #include <qpdf/Buffer.hh>
@@ -17,7 +18,6 @@
 #include <qpdf/QPDFWriter.hh>
 
 #include <algorithm>
-#include <charconv>
 #include <cmath>
 #include <exception>
 #include <memory>
@@ -86,16 +86,7 @@ int rotacionPagina(QPDFObjectHandle pagina) {
 } // namespace interno
 
 std::string numeroPdf(double v) {
-    if (!std::isfinite(v)) v = 0.0;
-    char buf[64];
-    const auto [fin, ec] = std::to_chars(buf, buf + sizeof(buf), v, std::chars_format::fixed, 3);
-    std::string s(buf, ec == std::errc() ? fin : buf);
-    if (s.find('.') != std::string::npos) {
-        while (!s.empty() && s.back() == '0') s.pop_back();
-        if (!s.empty() && s.back() == '.') s.pop_back();
-    }
-    if (s.empty() || s == "-0") s = "0";
-    return s;
+    return interno::escribirReal(v, 3);
 }
 
 std::string aWinAnsi(std::string_view u) {

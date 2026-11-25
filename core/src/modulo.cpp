@@ -6,6 +6,8 @@
 
 #include "ibanascapdfcore/rangos.h"
 
+#include "numeros.h"
+
 #include <algorithm>
 #include <charconv>
 #include <cstring>
@@ -29,10 +31,7 @@ double valorReal(const Valores& valores, const std::string& id, double defecto) 
     const auto it = valores.find(id);
     if (it == valores.end() || it->second.empty()) return defecto;
     double r = 0.0;
-    const char* ini = it->second.data();
-    const char* fin = ini + it->second.size();
-    const auto [p, ec] = std::from_chars(ini, fin, r);
-    return (ec == std::errc() && p == fin) ? r : defecto;
+    return interno::leerReal(it->second, r) ? r : defecto;
 }
 
 void colorRgb(const std::string& texto, double& r, double& g, double& b) {

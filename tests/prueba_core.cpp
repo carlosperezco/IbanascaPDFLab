@@ -12,6 +12,8 @@
 #include <ibanascapdfcore/rangos.h>
 #include <ibanascapdfcore/texto.h>
 
+#include "../core/src/numeros.h"
+
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -81,6 +83,22 @@ int main() {
     comprobar(ibz::numeroPdf(-0.5) == "-0.5", "numero negativo");
     comprobar(ibz::numeroPdf(1.23456) == "1.235", "numero redondeado");
     comprobar(ibz::numeroPdf(-0.0001) == "0", "menos cero");
+    {
+        double r = 0;
+        comprobar(ibz::interno::leerReal("2.5", r) && r == 2.5, "leer real");
+        comprobar(ibz::interno::leerReal("-0.125", r) && r == -0.125, "leer negativo");
+        comprobar(ibz::interno::leerReal("1e3", r) && r == 1000.0, "leer exponente");
+        comprobar(ibz::interno::leerReal(".5", r) && r == 0.5, "leer sin entero");
+        comprobar(ibz::interno::leerReal("595.276", r) && std::fabs(r - 595.276) < 1e-12, "leer decimales");
+        comprobar(!ibz::interno::leerReal("", r) && !ibz::interno::leerReal("2,5", r) &&
+                  !ibz::interno::leerReal(" 2", r) && !ibz::interno::leerReal("abc", r) &&
+                  !ibz::interno::leerReal("1e", r) && !ibz::interno::leerReal("1e999", r),
+                  "rechazar no numeros");
+        comprobar(ibz::interno::escribirReal(2.25, 1) == "2.3" || ibz::interno::escribirReal(2.25, 1) == "2.2",
+                  "escribir redondeo");
+        comprobar(ibz::interno::escribirReal(-3.0, 1) == "-3", "escribir entero");
+        comprobar(ibz::interno::escribirReal(0.05, 3) == "0.05", "escribir ceros");
+    }
     ibz::Valores v{{"x", "12.5"}, {"mal", "1,5"}};
     comprobar(ibz::valorReal(v, "x", 0) == 12.5, "valorReal");
     comprobar(ibz::valorReal(v, "mal", -1) == -1, "valorReal con coma");
