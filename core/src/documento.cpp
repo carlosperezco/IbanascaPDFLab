@@ -102,6 +102,23 @@ void Documento::abrir(const fs::path& ruta, const std::string& contrasena) {
     esNuevo_ = false;
 }
 
+void Documento::abrirMemoria(Bytes&& datos, const std::string& nombre, const std::string& contrasena) {
+    if (datos.empty()) throw Error("error.formato", nombre);
+    cargar(std::move(datos), contrasena, nombre);
+    deshacer_.clear();
+    rehacer_.clear();
+    ruta_ = desdeUtf8(nombre);
+    contrasena_ = contrasena;
+    modificado_ = false;
+    esNuevo_ = false;
+}
+
+void Documento::marcarGuardado(const std::string& nombre) {
+    ruta_ = desdeUtf8(nombre);
+    modificado_ = false;
+    esNuevo_ = false;
+}
+
 void Documento::cargar(Bytes&& datos, const std::string& contrasena, const std::string& detalle) {
     // PDFium lee del búfer mientras el documento esté abierto: el vector se mueve
     // (no se copia), así que su memoria sigue siendo la misma.

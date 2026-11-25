@@ -32,6 +32,13 @@ const std::filesystem::path& carpetaDatos();
  */
 std::filesystem::path carpetaUsuario();
 
+/**
+ * @brief Fija las carpetas de recursos y de ajustes (Android: las da la app).
+ *
+ * Debe llamarse antes de cualquier otra función de este archivo.
+ */
+void establecerCarpetas(const std::filesystem::path& datos, const std::filesystem::path& usuario);
+
 /// Archivo de ajustes del usuario (`ajustes.conf` dentro de carpetaUsuario()).
 std::filesystem::path rutaAjustes();
 

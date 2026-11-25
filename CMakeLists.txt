@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(ibanascapdf
-    VERSION 1.0.0
+    VERSION 1.1.0
     DESCRIPTION "Ibanasca PDF Lab"
     HOMEPAGE_URL "https://donatellatech.com"
     LANGUAGES C CXX)
@@ -38,8 +38,18 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3 REQUIRED IMPORTED_TARGET gtk+-3.0>=3.22)
 pkg_check_modules(QPDF REQUIRED IMPORTED_TARGET libqpdf>=11)
 find_package(ZLIB REQUIRED) # ya es dependencia de QPDF; se usa para leer PNG
-pkg_check_modules(GNUTLS REQUIRED IMPORTED_TARGET gnutls>=3.6) # ya es dependencia de QPDF; firma digital
+pkg_check_modules(GNUTLS REQUIRED IMPORTED_TARGET gnutls>=3.6) # ya es dependencia de QPDF; lee los .p12
 include(${PROJECT_SOURCE_DIR}/cmake/PDFium.cmake)
+
+# Nombres neutros que usa el núcleo (Android define los mismos con sus binarios).
+add_library(ibz_pdfium INTERFACE)
+target_link_libraries(ibz_pdfium INTERFACE PDFium::PDFium)
+add_library(ibz_qpdf INTERFACE)
+target_link_libraries(ibz_qpdf INTERFACE PkgConfig::QPDF)
+add_library(ibz_zlib INTERFACE)
+target_link_libraries(ibz_zlib INTERFACE ZLIB::ZLIB)
+add_library(ibz_gnutls INTERFACE)
+target_link_libraries(ibz_gnutls INTERFACE PkgConfig::GNUTLS)
 
 # ------------------------------------------------------------------ versión
 configure_file(app/version.h.in ${CMAKE_BINARY_DIR}/generado/version.h @ONLY)

@@ -42,7 +42,8 @@ enum class TipoParametro {
     TextoLargo,  ///< texto de varias líneas
     Color,       ///< color; valor "#rrggbb"
     ArchivoImagen,     ///< imagen PNG; valor: ruta UTF-8
-    ArchivoCertificado ///< certificado .p12/.pfx; valor: ruta UTF-8
+    ArchivoCertificado, ///< certificado: ruta UTF-8 de un .p12/.pfx (Android: o "keychain:<alias>")
+    Dibujo             ///< firma dibujada con el ratón o el dedo; valor: formato de dibujo.h
 };
 
 /// Descripción de un parámetro de un módulo.
@@ -56,7 +57,33 @@ struct Parametro {
     std::vector<std::string> opciones; ///< para Opcion: ids; la etiqueta es "<clave>.<id>"
     int minimo = 0;                    ///< para Entero
     int maximo = 0;                    ///< para Entero; -1 = número de páginas del documento
+    /**
+     * @brief Condición para mostrar el control: "otro_id=valor1|valor2".
+     *
+     * Vacío = siempre visible. La interfaz oculta el control mientras el parámetro
+     * @c otro_id no tenga uno de esos valores, y entonces no lo envía.
+     */
+    std::string visibleSi;
 };
+
+/**
+ * @brief true si @p p debe mostrarse con los valores actuales de los otros parámetros.
+ * @param valorDe función que devuelve el valor actual de un parámetro por su id.
+ */
+template <typename F>
+bool parametroVisible(const Parametro& p, F&& valorDe) {
+    if (p.visibleSi.empty()) return true;
+    const std::size_t igual = p.visibleSi.find('=');
+    if (igual == std::string::npos) return true;
+    const std::string actual = valorDe(p.visibleSi.substr(0, igual));
+    std::string_view resto = std::string_view(p.visibleSi).substr(igual + 1);
+    while (true) {
+        const std::size_t barra = resto.find('|');
+        if (resto.substr(0, barra) == actual) return true;
+        if (barra == std::string_view::npos) return false;
+        resto = resto.substr(barra + 1);
+    }
+}
 
 /**
  * @brief Valores elegidos por el usuario: id del parámetro → texto.

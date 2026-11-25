@@ -15,8 +15,9 @@ C++20 with GTK 3, PDFium and QPDF. Part of [DonatellaTech](https://donatellatech
 - **Document:** merge PDFs; split by page or by ranges, or extract pages to another PDF.
 - **Write:** add text (Helvetica, Times or Courier; size and colour) and insert PNG images.
 - **Sign:** digital signature PAdES-B-B with a `.p12`/`.pfx` certificate (visible box
-  with name and date, PNG image of the handwritten signature, or invisible) and visual
-  signature with a PNG image.
+  with name and date, signature drawn with the mouse, PNG image of the handwritten
+  signature, or invisible) and visual signature drawn with the mouse or from a PNG image.
+  Drawn signatures are stored as vector paths: sharp at any zoom and only a few bytes.
 - Undo and redo; the original file is never overwritten ("Save as").
 - Interface in English, Spanish and Italian.
 
@@ -88,6 +89,17 @@ tools/      helper scripts
 
 The document lives in memory; each operation produces a new PDF that PDFium
 reloads from memory (no temporary files), which also gives a simple undo stack.
+
+The core is shared with the Android version
+([IbanascaPDFAndroid](https://github.com/carlosperezco/IbanascaPDFAndroid)), which
+includes this repository as a git submodule and builds only `core/` and `lang/`.
+`core/CMakeLists.txt` expects the targets `ibz_pdfium`, `ibz_qpdf` and `ibz_zlib`
+(and `ibz_gnutls` when `IBZ_FIRMA_GNUTLS=ON`).
+
+The signature (CMS, SHA-256, PAdES attributes) is built by the core itself. Each
+platform only supplies an `ibz::Firmante` that holds the certificates and signs bytes
+with the private key: GnuTLS reads the `.p12` on the desktop
+(`core/src/firmante_gnutls.cpp`), and Android uses the system's Java classes.
 
 ### Adding a module
 

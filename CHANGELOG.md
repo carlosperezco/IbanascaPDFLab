@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-11-25
+
+### Added
+- Signature drawn by hand with the mouse (or the finger on Android): in Sign › Visual
+  Signature and as a new appearance of the digital signature. It is written to the
+  PDF as smoothed vector paths (no image, no extra library).
+- Dialog fields that only apply to one option are shown only when that option is chosen.
+- ECDSA certificates for the digital signature (in addition to RSA).
+
+### Changed
+- The core builds the CMS signature itself (SHA-256, PAdES-B-B attributes); GnuTLS is
+  now only used on the desktop to read `.p12`/`.pfx` files and sign with the key.
+- `core/` can be reused by other front ends: it expects the targets `ibz_pdfium`,
+  `ibz_qpdf`, `ibz_zlib` (and `ibz_gnutls`), and the data and settings folders can be
+  set by the platform. This is what the Android version uses.
+- Clearer messages when a password-protected PDF cannot be merged or signed.
+
 ## [1.0.0] - 2026-11-23
 
 First public release.

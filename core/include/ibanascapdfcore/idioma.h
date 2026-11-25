@@ -27,6 +27,8 @@ public:
     /// Código del idioma cargado ("es", "en", "it").
     const std::string& codigo() const noexcept { return codigo_; }
 
+    /// Todas las traducciones cargadas (clave → texto), por ejemplo para copiarlas a otra interfaz.
+    const std::unordered_map<std::string, std::string>& textos() const noexcept { return textos_; }
     /// Texto traducido; si falta la clave devuelve la propia clave.
     const std::string& tr(const char* clave) const;
 

@@ -85,7 +85,7 @@ error.eliminar_todas = No se pueden eliminar todas las páginas del documento.
 error.orden = El nuevo orden de páginas no es válido.
 error.sin_archivos = No se eligió ningún archivo.
 error.existe = Ya existe un archivo con ese nombre; no se sobrescribe. Cambie la carpeta o el nombre base.
-error.contrasena_archivo = Este PDF está protegido con contraseña. Ábralo, guárdelo sin protección y vuelva a intentarlo.
+error.contrasena_archivo = Este PDF está protegido con contraseña y esta versión no puede añadirlo. Use una copia sin protección.
 error.texto_vacio = No se escribió ningún texto.
 error.png = La imagen no es un PNG válido.
 error.png_entrelazado = Los PNG entrelazados no se admiten. Guarde la imagen sin entrelazado.
@@ -95,7 +95,7 @@ error.contrasena_certificado = La contraseña del certificado no es correcta.
 error.certificado_caducado = El certificado está caducado.
 error.certificado_no_vigente = El certificado todavía no es válido.
 error.firma = No se pudo crear la firma digital.
-error.firma_cifrado = El documento está protegido con contraseña. Guárdelo sin protección antes de firmarlo.
+error.firma_cifrado = El documento está protegido con contraseña y esta versión no puede firmarlo. Use una copia sin protección.
 error.ya_firmado = El documento ya tiene una firma digital. Esta versión admite una sola firma por documento.
 error.desconocido = Error inesperado.
 
@@ -175,7 +175,6 @@ param.aspecto = Aspecto:
 param.aspecto.texto = Recuadro con nombre y fecha
 param.aspecto.imagen = Imagen PNG de la firma
 param.aspecto.invisible = Invisible
-param.imagen_firma = Imagen (si se elige imagen):
 firma.aspecto.firmado_por = Firmado digitalmente por:
 firma.aspecto.fecha = Fecha: {1}
 
@@ -202,3 +201,29 @@ cli.uso = Uso: ibanascapdf [opciones] [archivo.pdf]\n\n  -h, --help      Muestra
 cli.opcion_desconocida = Opción desconocida: {1}
 cli.modulos = Módulos disponibles:
 cli.sin_modulos = No hay módulos registrados.
+
+# Firma dibujada (ratón o dedo)
+param.origen_firma = Firma:
+param.origen_firma.dibujo = Dibujarla a mano
+param.origen_firma.imagen = Imagen PNG
+param.dibujo = Dibuje su firma:
+param.aspecto.dibujo = Firma dibujada a mano
+dibujo.borrar = _Borrar
+dibujo.indicacion = Firme aquí
+error.dibujo = El dibujo de la firma no es válido.
+error.dibujo_vacio = Dibuje la firma antes de aceptar.
+error.firma_no_disponible = La firma digital no está disponible en esta versión.
+error.certificado_algoritmo = El certificado usa un tipo de clave no compatible (solo RSA y ECDSA).
+
+# Solo Android
+android.organizar = Organizar páginas
+android.organizar.ayuda = Mantenga pulsada una página y arrástrela para cambiar el orden.
+android.certificado_archivo = Archivo .p12/.pfx…
+android.certificado_instalado = Certificado instalado…
+android.certificado_ninguno = Ningún certificado elegido
+android.tocar_pagina = Toque la página donde quiere colocarlo.
+android.carpeta_destino = Elija la carpeta donde guardar los archivos.
+android.archivos_guardados = Se guardaron {1} archivos.
+android.guardado = Documento guardado.
+android.licencias = Licencias de código abierto
+android.ninguno = Ninguno

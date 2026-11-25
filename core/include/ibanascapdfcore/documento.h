@@ -48,6 +48,13 @@ public:
     void abrir(const std::filesystem::path& ruta, const std::string& contrasena = {});
 
     /**
+     * @brief Abre un PDF ya leído en memoria (Android: archivos del selector del sistema).
+     * @param nombre Nombre que se muestra (por ejemplo, "informe.pdf").
+     * @throws ibz::Error como abrir().
+     */
+    void abrirMemoria(Bytes&& datos, const std::string& nombre, const std::string& contrasena = {});
+
+    /**
      * @brief Abre un PDF creado en memoria (Archivo › Nuevo), sin archivo de origen.
      * @param nombre Nombre que se muestra (p. ej. "Sin título.pdf"); el documento
      *               queda como modificado hasta que se guarde.
@@ -109,6 +116,12 @@ public:
      *         ibz::Error("error.escribir") si no se puede escribir.
      */
     void guardarComo(const std::filesystem::path& ruta);
+
+    /**
+     * @brief Marca el documento como guardado con otro nombre (Android: lo escribe la
+     *        app con el selector del sistema a partir de bytes()).
+     */
+    void marcarGuardado(const std::string& nombre);
 
     /// Archivo original.
     const std::filesystem::path& ruta() const noexcept { return ruta_; }

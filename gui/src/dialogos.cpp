@@ -8,9 +8,12 @@
 #include "version.h"
 
 #include <ibanascapdfcore/claves.h>
+#include <ibanascapdfcore/dibujo.h>
 #include <ibanascapdfcore/error.h>
 #include <ibanascapdfcore/idioma.h>
 #include <ibanascapdfcore/rutas.h>
+
+#include <pango/pangocairo.h>
 
 #include <algorithm>
 #include <cmath>
@@ -292,6 +295,185 @@ std::string leerColor(GtkWidget* c) {
     return id ? id : "#000000";
 }
 
+// ------------------------------------------------------------ lienzo de firma
+
+constexpr const char* kLienzo = "ibz-lienzo";
+constexpr double kGrosorLienzo = 3.0;
+
+/// Trazos del lienzo de firma (ratón o lápiz) y el combo del color, si lo hay.
+struct LienzoFirma {
+    std::vector<std::vector<std::pair<float, float>>> trazos;
+    bool dibujando = false;
+    GtkWidget* area = nullptr;
+    GtkWidget* color = nullptr;
+};
+
+gboolean alDibujarLienzo(GtkWidget* w, cairo_t* cr, gpointer datos) {
+    const auto* l = static_cast<const LienzoFirma*>(datos);
+    const double ancho = gtk_widget_get_allocated_width(w);
+    const double alto = gtk_widget_get_allocated_height(w);
+    cairo_set_source_rgb(cr, 1, 1, 1);
+    cairo_paint(cr);
+
+    // Línea de firma e indicación mientras está vacío.
+    cairo_set_source_rgb(cr, 0.80, 0.82, 0.80);
+    cairo_set_line_width(cr, 1);
+    cairo_move_to(cr, 16, std::floor(alto * 0.78) + 0.5);
+    cairo_line_to(cr, ancho - 16, std::floor(alto * 0.78) + 0.5);
+    cairo_stroke(cr);
+    if (l->trazos.empty()) {
+        PangoLayout* capa = gtk_widget_create_pango_layout(w, tr("dibujo.indicacion").c_str());
+        int tw = 0;
+        int th = 0;
+        pango_layout_get_pixel_size(capa, &tw, &th);
+        cairo_set_source_rgb(cr, 0.62, 0.65, 0.62);
+        cairo_move_to(cr, (ancho - tw) / 2, alto * 0.78 - th - 6);
+        pango_cairo_show_layout(cr, capa);
+        g_object_unref(capa);
+    }
+
+    double r = 0.12;
+    double g = 0.23;
+    double b = 0.58;
+    if (l->color) {
+        const gchar* id = gtk_combo_box_get_active_id(GTK_COMBO_BOX(l->color));
+        if (id) colorRgb(id, r, g, b);
+    }
+    cairo_set_source_rgb(cr, r, g, b);
+    cairo_set_line_width(cr, kGrosorLienzo);
+    cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+    cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
+    for (const auto& t : l->trazos) {
+        if (t.empty()) continue;
+        cairo_move_to(cr, t[0].first, t[0].second);
+        if (t.size() == 1) cairo_line_to(cr, t[0].first, t[0].second);
+        for (std::size_t i = 1; i < t.size(); ++i) cairo_line_to(cr, t[i].first, t[i].second);
+        cairo_stroke(cr);
+    }
+    return TRUE;
+}
+
+gboolean alPulsarLienzo(GtkWidget* w, GdkEventButton* e, gpointer datos) {
+    if (e->button != 1 || e->type != GDK_BUTTON_PRESS) return FALSE;
+    auto* l = static_cast<LienzoFirma*>(datos);
+    l->trazos.push_back({{static_cast<float>(e->x), static_cast<float>(e->y)}});
+    l->dibujando = true;
+    gtk_widget_queue_draw(w);
+    return TRUE;
+}
+
+gboolean alMoverLienzo(GtkWidget* w, GdkEventMotion* e, gpointer datos) {
+    auto* l = static_cast<LienzoFirma*>(datos);
+    if (!l->dibujando || l->trazos.empty()) return FALSE;
+    auto& t = l->trazos.back();
+    const double dx = e->x - t.back().first;
+    const double dy = e->y - t.back().second;
+    if (dx * dx + dy * dy >= 1.0) {
+        t.emplace_back(static_cast<float>(e->x), static_cast<float>(e->y));
+        gtk_widget_queue_draw(w);
+    }
+    return TRUE;
+}
+
+gboolean alSoltarLienzo(GtkWidget*, GdkEventButton* e, gpointer datos) {
+    if (e->button == 1) static_cast<LienzoFirma*>(datos)->dibujando = false;
+    return TRUE;
+}
+
+void alRealizarLienzo(GtkWidget* w, gpointer) {
+    // Todos los movimientos del ratón, sin agrupar: trazos más fieles.
+    gdk_window_set_event_compression(gtk_widget_get_window(w), FALSE);
+}
+
+void alBorrarLienzo(GtkButton*, gpointer datos) {
+    auto* l = static_cast<LienzoFirma*>(datos);
+    l->trazos.clear();
+    l->dibujando = false;
+    gtk_widget_queue_draw(l->area);
+}
+
+void alCambiarColorLienzo(GtkComboBox*, gpointer area) {
+    gtk_widget_queue_draw(GTK_WIDGET(area));
+}
+
+/// Lienzo para firmar con el ratón: área blanca y botón «Borrar».
+GtkWidget* crearDibujo() {
+    auto* l = new LienzoFirma;
+    GtkWidget* caja = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
+    g_object_set_data_full(G_OBJECT(caja), kLienzo, l, [](gpointer p) { delete static_cast<LienzoFirma*>(p); });
+
+    GtkWidget* marco = gtk_frame_new(nullptr);
+    gtk_frame_set_shadow_type(GTK_FRAME(marco), GTK_SHADOW_IN);
+    l->area = gtk_drawing_area_new();
+    gtk_widget_set_size_request(l->area, 440, 160);
+    gtk_widget_add_events(l->area, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_BUTTON1_MOTION_MASK);
+    g_signal_connect(l->area, "draw", G_CALLBACK(alDibujarLienzo), l);
+    g_signal_connect(l->area, "button-press-event", G_CALLBACK(alPulsarLienzo), l);
+    g_signal_connect(l->area, "motion-notify-event", G_CALLBACK(alMoverLienzo), l);
+    g_signal_connect(l->area, "button-release-event", G_CALLBACK(alSoltarLienzo), l);
+    g_signal_connect(l->area, "realize", G_CALLBACK(alRealizarLienzo), nullptr);
+    gtk_container_add(GTK_CONTAINER(marco), l->area);
+    gtk_box_pack_start(GTK_BOX(caja), marco, TRUE, TRUE, 0);
+
+    GtkWidget* borrar = gtk_button_new_with_mnemonic(tr("dibujo.borrar").c_str());
+    gtk_widget_set_halign(borrar, GTK_ALIGN_END);
+    g_signal_connect(borrar, "clicked", G_CALLBACK(alBorrarLienzo), l);
+    gtk_box_pack_start(GTK_BOX(caja), borrar, FALSE, FALSE, 0);
+    return caja;
+}
+
+/// Une el lienzo con el combo de color para que el trazo se vea en ese color.
+void enlazarColorLienzo(GtkWidget* lienzo, GtkWidget* combo) {
+    auto* l = static_cast<LienzoFirma*>(g_object_get_data(G_OBJECT(lienzo), kLienzo));
+    l->color = combo;
+    g_signal_connect(combo, "changed", G_CALLBACK(alCambiarColorLienzo), l->area);
+}
+
+std::string leerDibujoLienzo(GtkWidget* c) {
+    const auto* l = static_cast<const LienzoFirma*>(g_object_get_data(G_OBJECT(c), kLienzo));
+    Dibujo d;
+    d.ancho = gtk_widget_get_allocated_width(l->area);
+    d.alto = gtk_widget_get_allocated_height(l->area);
+    d.grosor = kGrosorLienzo;
+    d.trazos = l->trazos;
+    return d.vacio() ? std::string() : escribirDibujo(d);
+}
+
+// ------------------------------------------------------------ visibilidad
+
+/// Filas del diálogo de parámetros, para mostrar u ocultar según visibleSi.
+struct FilasDialogo {
+    std::vector<Parametro> ps;
+    std::vector<GtkWidget*> etiquetas;
+    std::vector<GtkWidget*> controles;
+    GtkWidget* dialogo = nullptr;
+
+    /// Valor actual de una opción (para evaluar las condiciones).
+    std::string valorOpcion(const std::string& id) const {
+        for (std::size_t i = 0; i < ps.size(); ++i) {
+            if (ps[i].id != id || ps[i].tipo != TipoParametro::Opcion) continue;
+            const gchar* v = gtk_combo_box_get_active_id(GTK_COMBO_BOX(controles[i]));
+            return v ? v : "";
+        }
+        return {};
+    }
+    bool visible(std::size_t i) const {
+        return parametroVisible(ps[i], [this](const std::string& id) { return valorOpcion(id); });
+    }
+    void actualizar() const {
+        for (std::size_t i = 0; i < ps.size(); ++i) {
+            const bool v = visible(i);
+            gtk_widget_set_visible(etiquetas[i], v);
+            gtk_widget_set_visible(controles[i], v);
+        }
+        if (dialogo) gtk_window_resize(GTK_WINDOW(dialogo), 1, 1); // se encoge al ocultar filas
+    }
+};
+
+void alCambiarOpcion(GtkComboBox*, gpointer filas) {
+    static_cast<const FilasDialogo*>(filas)->actualizar();
+}
+
 /// Tipos cuyo último valor se recuerda entre usos.
 bool seRecuerda(TipoParametro t) {
     return t == TipoParametro::Opcion || t == TipoParametro::Entero || t == TipoParametro::Color ||
@@ -453,7 +635,10 @@ bool pedirParametros(GtkWindow* padre, const Modulo& modulo, Valores& valores, c
     gtk_grid_set_column_spacing(GTK_GRID(rejilla), 12);
     gtk_container_set_border_width(GTK_CONTAINER(rejilla), 12);
 
-    std::vector<GtkWidget*> controles;
+    FilasDialogo filas;
+    filas.ps = ps;
+    filas.dialogo = d;
+    std::vector<GtkWidget*>& controles = filas.controles;
     controles.reserve(ps.size());
     int fila = 0;
     for (const Parametro& p : ps) {
@@ -517,14 +702,28 @@ bool pedirParametros(GtkWindow* padre, const Modulo& modulo, Valores& valores, c
         case TipoParametro::ArchivoCertificado:
             c = crearArchivo(padre, defecto, "filtro.certificado", "*.p12;*.pfx;*.P12;*.PFX");
             break;
+        case TipoParametro::Dibujo:
+            c = crearDibujo();
+            gtk_label_set_yalign(GTK_LABEL(etiqueta), 0.0f);
+            break;
         }
         gtk_grid_attach(GTK_GRID(rejilla), etiqueta, 0, fila, 1, 1);
         gtk_grid_attach(GTK_GRID(rejilla), c, 1, fila, 1, 1);
         controles.push_back(c);
+        filas.etiquetas.push_back(etiqueta);
         ++fila;
+    }
+    // Las opciones deciden qué filas se ven; el lienzo usa el color elegido.
+    for (std::size_t i = 0; i < ps.size(); ++i) {
+        if (ps[i].tipo == TipoParametro::Opcion)
+            g_signal_connect(controles[i], "changed", G_CALLBACK(alCambiarOpcion), &filas);
+        if (ps[i].tipo == TipoParametro::Dibujo)
+            for (std::size_t j = 0; j < ps.size(); ++j)
+                if (ps[j].tipo == TipoParametro::Color) enlazarColorLienzo(controles[i], controles[j]);
     }
     gtk_container_add(GTK_CONTAINER(gtk_dialog_get_content_area(GTK_DIALOG(d))), rejilla);
     gtk_widget_show_all(d);
+    filas.actualizar();
     // El cursor empieza en el texto a escribir, si lo hay.
     for (std::size_t i = 0; i < ps.size(); ++i) {
         if (ps[i].tipo == TipoParametro::TextoLargo) {
@@ -537,6 +736,7 @@ bool pedirParametros(GtkWindow* padre, const Modulo& modulo, Valores& valores, c
     if (ok) {
         for (std::size_t i = 0; i < ps.size(); ++i) {
             GtkWidget* c = controles[i];
+            if (!filas.visible(i)) continue; // oculto: no se envía ni se recuerda
             switch (ps[i].tipo) {
             case TipoParametro::Entero:
                 valores[ps[i].id] = std::to_string(gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(c)));
@@ -567,6 +767,9 @@ bool pedirParametros(GtkWindow* padre, const Modulo& modulo, Valores& valores, c
             case TipoParametro::ArchivoImagen:
             case TipoParametro::ArchivoCertificado:
                 valores[ps[i].id] = gtk_entry_get_text(GTK_ENTRY(g_object_get_data(G_OBJECT(c), kLista)));
+                break;
+            case TipoParametro::Dibujo:
+                valores[ps[i].id] = leerDibujoLienzo(c);
                 break;
             }
             if (ctx.recordados && seRecuerda(ps[i].tipo))

@@ -84,7 +84,28 @@ fs::path carpetaEjecutable() {
 #endif
 }
 
+namespace {
+
+/// Carpetas fijadas por la plataforma (Android); vacías = se calculan.
+fs::path& datosFijada() {
+    static fs::path p;
+    return p;
+}
+
+fs::path& usuarioFijada() {
+    static fs::path p;
+    return p;
+}
+
+} // namespace
+
+void establecerCarpetas(const fs::path& datos, const fs::path& usuario) {
+    datosFijada() = datos;
+    usuarioFijada() = usuario;
+}
+
 const fs::path& carpetaDatos() {
+    if (!datosFijada().empty()) return datosFijada();
     static const fs::path carpeta = [] {
         const std::string forzada = variableEntorno("IBANASCAPDF_DATOS");
         if (!forzada.empty()) return desdeUtf8(forzada);
@@ -99,6 +120,11 @@ const fs::path& carpetaDatos() {
 
 fs::path carpetaUsuario() {
     fs::path base;
+    if (!usuarioFijada().empty()) {
+        std::error_code ec;
+        fs::create_directories(usuarioFijada(), ec);
+        return usuarioFijada();
+    }
 #ifdef _WIN32
     const std::string appdata = variableEntorno("APPDATA");
     base = (appdata.empty() ? carpetaEjecutable() : desdeUtf8(appdata)) / "DonatellaTech" / "IbanascaPDFLab";

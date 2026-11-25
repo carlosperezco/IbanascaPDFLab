@@ -3,6 +3,7 @@
  * @brief Pruebas mínimas del núcleo (sin marco de pruebas externo).
  */
 #include <ibanascapdfcore/claves.h>
+#include <ibanascapdfcore/dibujo.h>
 #include <ibanascapdfcore/error.h>
 #include <ibanascapdfcore/firma.h>
 #include <ibanascapdfcore/imagen.h>
@@ -11,8 +12,11 @@
 #include <ibanascapdfcore/rangos.h>
 #include <ibanascapdfcore/texto.h>
 
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <ctime>
+#include <memory>
 #include <string>
 #include <zlib.h>
 #include <filesystem>
@@ -113,8 +117,13 @@ int main() {
 
     // Firma CMS sobre un PDF mínimo con el relleno de /ByteRange y /Contents.
     {
-        const ibz::Firmante f(std::filesystem::path(IBZ_DATOS_PRUEBA) / "firma_prueba.p12", "prueba");
-        comprobar(f.nombre() == "Firmante de Prueba Ñandú", "nombre del firmante (UTF-8)");
+        const std::string p12 = (std::filesystem::path(IBZ_DATOS_PRUEBA) / "firma_prueba.p12").string();
+        const std::unique_ptr<ibz::Firmante> firmante = ibz::crearFirmante(p12, "prueba");
+        const ibz::Firmante& f = *firmante;
+        const ibz::InfoCertificado info = ibz::leerCertificado(f.certificados().front());
+        comprobar(info.nombre == "Firmante de Prueba Ñandú", "nombre del firmante (UTF-8)");
+        comprobar(info.algoritmo == ibz::AlgoritmoClave::Rsa, "clave RSA");
+        comprobar(info.desde < std::time(nullptr) && info.hasta > std::time(nullptr), "vigencia del certificado");
         const std::string cab = "%PDF-1.7\n1 0 obj << /ByteRange [ 9999999999 9999999999 9999999999 9999999999 ] /Contents <";
         const std::string pie = "> /Type /Sig >> endobj\ntrailer << >>\n%%EOF\n";
         std::string texto = cab + std::string(2 * ibz::kBytesFirma, '0') + pie;
@@ -128,9 +137,35 @@ int main() {
         comprobar(r.compare(a + 1, 4, "3082") == 0, "Contents con CMS (SEQUENCE DER)");
         comprobar(r.size() == texto.size(), "tamaño del PDF sin cambios");
         bool error = false;
-        try { ibz::Firmante mala(std::filesystem::path(IBZ_DATOS_PRUEBA) / "firma_prueba.p12", "otra"); }
+        try { ibz::crearFirmante(p12, "otra"); }
         catch (const ibz::Error& e) { error = e.clave() == "error.contrasena_certificado"; }
         comprobar(error, "contraseña incorrecta");
+    }
+
+    // Firma dibujada: formato de texto y trazado vectorial.
+    {
+        const ibz::Dibujo d = ibz::leerDibujo("ibzd1;400,160,3;10,20,30,40,50,20;100.5,80");
+        comprobar(d.ancho == 400 && d.alto == 160 && d.grosor == 3 && d.trazos.size() == 2, "dibujo leído");
+        comprobar(d.trazos[0].size() == 3 && d.trazos[1].size() == 1, "puntos de cada trazo");
+        comprobar(ibz::leerDibujo(ibz::escribirDibujo(d)).trazos == d.trazos, "dibujo escrito y releído");
+        comprobar(ibz::leerDibujo("").vacio(), "dibujo vacío");
+        // Contorno: x 10..100.5, y 20..80, más medio grosor (1.5) de margen.
+        const double prop = ibz::proporcionDibujo(d);
+        comprobar(std::abs(prop - 63.0 / 93.5) < 1e-6, "proporción del dibujo");
+        const std::string cs = ibz::contenidoDibujo(d, 93.5, 0, 0, 1);
+        comprobar(cs.find(" c\n") != std::string::npos && cs.find("1 J 1 j") != std::string::npos, "curvas y extremos redondos");
+        comprobar(cs.find("3 w") != std::string::npos, "grosor a escala 1:1");
+        bool error = false;
+        try { ibz::leerDibujo("ibzd1;400,160,3;10,20,30"); } catch (const ibz::Error& e) { error = e.clave() == "error.dibujo"; }
+        comprobar(error, "dibujo mal formado");
+    }
+
+    // Visibilidad condicionada de los parámetros.
+    {
+        ibz::Parametro p;
+        p.visibleSi = "aspecto=texto|dibujo";
+        auto con = [](std::string v) { return [v](const std::string&) { return v; }; };
+        comprobar(ibz::parametroVisible(p, con("dibujo")) && !ibz::parametroVisible(p, con("invisible")), "visibleSi");
     }
 
     if (fallos == 0) std::printf("Todas las pruebas correctas\n");

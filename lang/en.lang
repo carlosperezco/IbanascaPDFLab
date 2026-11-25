@@ -85,7 +85,7 @@ error.eliminar_todas = All the pages of the document cannot be deleted.
 error.orden = The new page order is not valid.
 error.sin_archivos = No file was chosen.
 error.existe = A file with that name already exists; it is not overwritten. Change the folder or the base name.
-error.contrasena_archivo = This PDF is password protected. Open it, save it without protection and try again.
+error.contrasena_archivo = This PDF is password protected and this version cannot add it. Use an unprotected copy.
 error.texto_vacio = No text was written.
 error.png = The image is not a valid PNG.
 error.png_entrelazado = Interlaced PNGs are not supported. Save the image without interlacing.
@@ -95,7 +95,7 @@ error.contrasena_certificado = The certificate password is not correct.
 error.certificado_caducado = The certificate has expired.
 error.certificado_no_vigente = The certificate is not valid yet.
 error.firma = The digital signature could not be created.
-error.firma_cifrado = The document is password protected. Save it without protection before signing it.
+error.firma_cifrado = The document is password protected and this version cannot sign it. Use an unprotected copy.
 error.ya_firmado = The document already has a digital signature. This version supports a single signature per document.
 error.desconocido = Unexpected error.
 
@@ -175,7 +175,6 @@ param.aspecto = Appearance:
 param.aspecto.texto = Box with name and date
 param.aspecto.imagen = PNG image of the signature
 param.aspecto.invisible = Invisible
-param.imagen_firma = Image (if image is chosen):
 firma.aspecto.firmado_por = Digitally signed by:
 firma.aspecto.fecha = Date: {1}
 
@@ -202,3 +201,29 @@ cli.uso = Usage: ibanascapdf [options] [file.pdf]\n\n  -h, --help      Show this
 cli.opcion_desconocida = Unknown option: {1}
 cli.modulos = Available modules:
 cli.sin_modulos = No modules are registered.
+
+# Firma dibujada (ratón o dedo)
+param.origen_firma = Signature:
+param.origen_firma.dibujo = Draw it by hand
+param.origen_firma.imagen = PNG image
+param.dibujo = Draw your signature:
+param.aspecto.dibujo = Hand-drawn signature
+dibujo.borrar = _Clear
+dibujo.indicacion = Sign here
+error.dibujo = The signature drawing is not valid.
+error.dibujo_vacio = Draw the signature before accepting.
+error.firma_no_disponible = Digital signatures are not available in this version.
+error.certificado_algoritmo = The certificate uses an unsupported key type (only RSA and ECDSA).
+
+# Solo Android
+android.organizar = Organize pages
+android.organizar.ayuda = Touch and hold a page, then drag it to change the order.
+android.certificado_archivo = .p12/.pfx file…
+android.certificado_instalado = Installed certificate…
+android.certificado_ninguno = No certificate chosen
+android.tocar_pagina = Tap the page where you want to place it.
+android.carpeta_destino = Choose the folder where the files will be saved.
+android.archivos_guardados = {1} files saved.
+android.guardado = Document saved.
+android.licencias = Open-source licenses
+android.ninguno = None

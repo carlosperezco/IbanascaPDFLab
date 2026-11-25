@@ -61,8 +61,12 @@ std::string fechaLocal(std::time_t t) {
 
 } // namespace
 
-void firmarDocumento(Documento& doc, const Firmante& firmante, const OpcionesFirma& o) {
+std::string firmarDocumento(Documento& doc, const Firmante& firmante, const OpcionesFirma& o) {
     if (!doc.abierto()) throw Error("error.sin_documento");
+    if (firmante.certificados().empty()) throw Error("error.certificado");
+    const InfoCertificado info = leerCertificado(firmante.certificados().front());
+    comprobarVigencia(info);
+    const std::string nombreFirmante = info.nombre.empty() ? std::string("?") : info.nombre;
     const bool visible = o.aspecto != AspectoFirma::Invisible;
     if (visible && (o.pagina < 0 || o.pagina >= doc.paginas())) throw Error("error.rangos");
     const std::time_t ahora = std::time(nullptr);
@@ -93,7 +97,7 @@ void firmarDocumento(Documento& doc, const Firmante& firmante, const OpcionesFir
         firma.replaceKey("/ByteRange", rango);
         firma.replaceKey("/Contents", QPDFObjectHandle::newString(std::string(kBytesFirma, '\0')));
         firma.replaceKey("/M", QPDFObjectHandle::newString(fechaPdf(ahora)));
-        firma.replaceKey("/Name", QPDFObjectHandle::newUnicodeString(firmante.nombre()));
+        firma.replaceKey("/Name", QPDFObjectHandle::newUnicodeString(nombreFirmante));
         firma = pdf.makeIndirectObject(firma);
 
         // Rectángulo y aspecto.
@@ -105,6 +109,9 @@ void firmarDocumento(Documento& doc, const Firmante& firmante, const OpcionesFir
             if (o.aspecto == AspectoFirma::Imagen) {
                 if (o.imagen.ancho <= 0 || o.imagen.alto <= 0) throw Error("error.png");
                 h = w * o.imagen.alto / o.imagen.ancho;
+            } else if (o.aspecto == AspectoFirma::Dibujo) {
+                if (o.dibujo.vacio()) throw Error("error.dibujo_vacio");
+                h = w * proporcionDibujo(o.dibujo);
             }
             const int rot = interno::rotacionPagina(pagina.getObjectHandle());
             const double rad = rot * 3.14159265358979323846 / 180.0;
@@ -125,6 +132,8 @@ void firmarDocumento(Documento& doc, const Firmante& firmante, const OpcionesFir
                 xo.replaceKey("/Im", interno::xobjetoImagen(pdf, o.imagen));
                 recursos.replaceKey("/XObject", xo);
                 cs = "q " + numeroPdf(w) + " 0 0 " + numeroPdf(h) + " 0 0 cm /Im Do Q\n";
+            } else if (o.aspecto == AspectoFirma::Dibujo) {
+                cs = contenidoDibujo(o.dibujo, w, o.r, o.g, o.b);
             } else {
                 auto fuente = [&](const char* nombre) {
                     QPDFObjectHandle f = QPDFObjectHandle::newDictionary();
@@ -141,7 +150,7 @@ void firmarDocumento(Documento& doc, const Firmante& firmante, const OpcionesFir
 
                 const double margen = h * 0.10;
                 const std::string titulo = aWinAnsi(tr("firma.aspecto.firmado_por"));
-                const std::string nombre = aWinAnsi(firmante.nombre());
+                const std::string nombre = aWinAnsi(nombreFirmante);
                 const std::string fecha = aWinAnsi(formato(tr("firma.aspecto.fecha"), {fechaLocal(ahora)}));
                 // Helvetica: ~0.55 em de ancho medio; el nombre se reduce si no cabe.
                 const double tPequeno = h * 0.17;
@@ -224,6 +233,7 @@ void firmarDocumento(Documento& doc, const Firmante& firmante, const OpcionesFir
 
     completarFirma(salida, firmante);
     doc.reemplazar(std::move(salida));
+    return nombreFirmante;
 }
 
 } // namespace ibz

@@ -15,8 +15,9 @@ en C++20 con GTK 3, PDFium y QPDF. Forma parte de [DonatellaTech](https://donate
 - **Documento:** fusionar PDF; separar por página o por rangos, o extraer páginas a otro PDF.
 - **Escribir:** añadir texto (Helvetica, Times o Courier; tamaño y color) e insertar imágenes PNG.
 - **Firmar:** firma digital PAdES-B-B con certificado `.p12`/`.pfx` (recuadro visible con
-  nombre y fecha, imagen PNG de la firma manuscrita o invisible) y firma visual con una
-  imagen PNG.
+  nombre y fecha, firma dibujada con el ratón, imagen PNG de la firma manuscrita o
+  invisible) y firma visual dibujada con el ratón o desde una imagen PNG. La firma
+  dibujada se guarda como trazado vectorial: nítida a cualquier zoom y de pocos bytes.
 - Deshacer y rehacer; el archivo original nunca se sobrescribe («Guardar como»).
 - Interfaz en español, inglés e italiano.
 
@@ -90,6 +91,17 @@ tools/      scripts auxiliares
 El documento vive en memoria; cada operación produce un PDF nuevo que PDFium
 vuelve a cargar desde memoria (sin archivos temporales), lo que además da una
 pila de deshacer sencilla.
+
+El núcleo se comparte con la versión Android
+([IbanascaPDFAndroid](https://github.com/carlosperezco/IbanascaPDFAndroid)), que
+incluye este repositorio como submódulo de git y solo compila `core/` y `lang/`.
+`core/CMakeLists.txt` espera los destinos `ibz_pdfium`, `ibz_qpdf` e `ibz_zlib`
+(y `ibz_gnutls` si `IBZ_FIRMA_GNUTLS=ON`).
+
+La firma (CMS, SHA-256, atributos PAdES) la arma el propio núcleo. Cada plataforma
+solo aporta un `ibz::Firmante` que guarda los certificados y firma bytes con la
+clave privada: en escritorio GnuTLS lee el `.p12` (`core/src/firmante_gnutls.cpp`)
+y en Android se usan las clases de Java del sistema.
 
 ### Añadir un módulo
 
