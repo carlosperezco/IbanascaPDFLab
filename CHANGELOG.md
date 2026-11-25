@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.1.2] - 2026-11-25
+
+### Fixed
+- The menu entry "Visual Signature…" no longer says "(PNG image)": since 1.1.0 it also
+  draws the signature by hand.
+
 ## [1.1.1] - 2026-11-25
 
 ### Fixed

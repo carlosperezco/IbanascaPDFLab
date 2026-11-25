@@ -160,7 +160,7 @@ color.gris = Gray
 
 # Firma
 modulo.insertar_imagen.nombre = Insert _Image (PNG)…
-modulo.firma_visual.nombre = _Visual Signature (PNG image)…
+modulo.firma_visual.nombre = _Visual Signature…
 param.imagen = PNG image:
 param.ancho_mm = Width (mm):
 param.fondo = White background:
@@ -225,5 +225,6 @@ android.tocar_pagina = Tap the page where you want to place it.
 android.carpeta_destino = Choose the folder where the files will be saved.
 android.archivos_guardados = {1} files saved.
 android.guardado = Document saved.
+android.compartir = Share…
 android.licencias = Open-source licenses
 android.ninguno = None

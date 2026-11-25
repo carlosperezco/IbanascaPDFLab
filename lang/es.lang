@@ -160,7 +160,7 @@ color.gris = Gris
 
 # Firma
 modulo.insertar_imagen.nombre = Insertar _imagen (PNG)…
-modulo.firma_visual.nombre = Firma _visual (imagen PNG)…
+modulo.firma_visual.nombre = Firma _visual…
 param.imagen = Imagen PNG:
 param.ancho_mm = Ancho (mm):
 param.fondo = Fondo blanco:
@@ -225,5 +225,6 @@ android.tocar_pagina = Toque la página donde quiere colocarlo.
 android.carpeta_destino = Elija la carpeta donde guardar los archivos.
 android.archivos_guardados = Se guardaron {1} archivos.
 android.guardado = Documento guardado.
+android.compartir = Compartir…
 android.licencias = Licencias de código abierto
 android.ninguno = Ninguno

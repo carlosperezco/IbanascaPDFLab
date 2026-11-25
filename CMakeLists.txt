@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(ibanascapdf
-    VERSION 1.1.1
+    VERSION 1.1.2
     DESCRIPTION "Ibanasca PDF Lab"
     HOMEPAGE_URL "https://donatellatech.com"
     LANGUAGES C CXX)
